@@ -1,0 +1,521 @@
+:root {
+  --primary-burgundy: #6b1d2f;
+  --primary-dark: #4a101e;
+  --gold-accent: #c59b27;
+  --gold-light: #e5c158;
+
+  --bg: #fbf9f6;
+  --surface: #ffffff;
+  --text: #1c1917;
+  --text-muted: #78716c;
+  --border: rgba(0, 0, 0, 0.08);
+
+  --font-family: serif;
+  --reader-font-size: 19px;
+  --line-height: 1.7;
+
+  /* 5 Cores de Marca-texto */
+  --hl-verde: #d1fae5;
+  --hl-amarelo: #fef3c7;
+  --hl-azul: #dbeafe;
+  --hl-laranja: #ffedd5;
+  --hl-rosa: #fce7f3;
+}
+
+[data-theme="sepia"] {
+  --bg: #f4ecd8;
+  --surface: #eadfca;
+  --text: #382c1e;
+  --text-muted: #796853;
+  --border: rgba(56, 44, 30, 0.12);
+
+  --hl-verde: #c8eed9;
+  --hl-amarelo: #fbe8a6;
+  --hl-azul: #d0e1fd;
+  --hl-laranja: #fcddc1;
+  --hl-rosa: #f8d2e7;
+}
+
+[data-theme="dark"] {
+  --bg: #121214;
+  --surface: #1c1c20;
+  --text: #e7e5e4;
+  --text-muted: #a8a29e;
+  --border: rgba(255, 255, 255, 0.08);
+
+  --hl-verde: rgba(16, 185, 129, 0.25);
+  --hl-amarelo: rgba(245, 158, 11, 0.25);
+  --hl-azul: rgba(59, 130, 246, 0.25);
+  --hl-laranja: rgba(249, 115, 22, 0.25);
+  --hl-rosa: rgba(236, 72, 153, 0.25);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  transition: background-color 0.2s, color 0.2s;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* APP SHELL */
+#app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+  position: relative;
+  background-color: var(--bg);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.05);
+}
+
+/* APP BAR */
+header#app-header {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  background-color: var(--bg);
+  border-bottom: 1px solid var(--border);
+  z-index: 10;
+}
+
+.header-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--primary-burgundy);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 16px;
+  transition: background-color 0.15s;
+}
+
+[data-theme="dark"] .header-btn {
+  color: var(--gold-light);
+}
+
+.header-btn:hover {
+  background-color: rgba(107, 29, 47, 0.08);
+}
+
+.header-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.icon-btn:hover {
+  background-color: var(--border);
+  color: var(--text);
+}
+
+.icon-btn.completed {
+  color: #10b981;
+}
+
+/* VIEWS WRAPPER */
+main#views-container {
+  flex: 1;
+  overflow-y: auto;
+  position: relative;
+}
+
+.view-section {
+  display: none;
+  padding: 20px 24px 80px;
+  max-width: 800px;
+  margin: 0 auto;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.view-section.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* LEITOR BÍBLICO */
+#reader-header-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--border);
+}
+
+.acf-badge {
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 0.8px;
+  color: var(--primary-burgundy);
+  background-color: rgba(107, 29, 47, 0.1);
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+[data-theme="dark"] .acf-badge {
+  color: var(--gold-light);
+  background-color: rgba(229, 193, 88, 0.15);
+}
+
+#reading-completion-toast {
+  display: none;
+  background-color: #d1fae5;
+  color: #065f46;
+  padding: 10px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  font-weight: 600;
+  align-items: center;
+  gap: 8px;
+}
+
+#reading-completion-toast.visible {
+  display: flex;
+}
+
+#verses-list {
+  font-family: var(--font-family);
+  font-size: var(--reader-font-size);
+  line-height: var(--line-height);
+}
+
+.verse-item {
+  padding: 4px 6px;
+  margin-bottom: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: filter 0.1s;
+}
+
+.verse-item:hover {
+  filter: brightness(0.96);
+}
+
+.verse-num {
+  font-size: 0.75em;
+  font-weight: bold;
+  color: var(--primary-burgundy);
+  vertical-align: super;
+  margin-right: 4px;
+  user-select: none;
+}
+
+[data-theme="dark"] .verse-num {
+  color: var(--gold-light);
+}
+
+.verse-text {
+  display: inline;
+}
+
+/* Cores de destaque nos versículos */
+.verse-item.hl-verde { background-color: var(--hl-verde); }
+.verse-item.hl-amarelo { background-color: var(--hl-amarelo); }
+.verse-item.hl-azul { background-color: var(--hl-azul); }
+.verse-item.hl-laranja { background-color: var(--hl-laranja); }
+.verse-item.hl-rosa { background-color: var(--hl-rosa); }
+
+/* NAVEGAÇÃO DE CAPÍTULO */
+.chapter-nav-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.btn-nav {
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background-color: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-nav.primary {
+  background-color: var(--primary-burgundy);
+  color: #ffffff;
+  border: none;
+}
+
+/* DEVOCIONAIS */
+.banner-card {
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary-burgundy));
+  color: #ffffff;
+  padding: 24px;
+  border-radius: 16px;
+  margin-bottom: 24px;
+}
+
+.banner-card h2 {
+  font-size: 22px;
+  margin: 8px 0 4px;
+}
+
+.banner-card p {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 13px;
+}
+
+.card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.card-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+
+.passage-badge {
+  display: inline-block;
+  background-color: rgba(197, 155, 39, 0.15);
+  color: var(--gold-accent);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+
+/* ORAÇÕES */
+.tab-pills {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.tab-pill {
+  flex: 1;
+  padding: 10px;
+  text-align: center;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background-color: var(--surface);
+  color: var(--text-muted);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tab-pill.active {
+  background-color: var(--primary-burgundy);
+  color: #ffffff;
+  border-color: var(--primary-burgundy);
+}
+
+.prayer-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.prayer-card.answered {
+  border-left: 4px solid #10b981;
+}
+
+.prayer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+/* PROGRESSO */
+.progress-bar-container {
+  margin-bottom: 16px;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.progress-track {
+  height: 8px;
+  background-color: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: var(--primary-burgundy);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+/* BOTTOM NAVIGATION */
+nav#bottom-nav {
+  height: 64px;
+  display: flex;
+  background-color: var(--surface);
+  border-top: 1px solid var(--border);
+  z-index: 10;
+}
+
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  gap: 4px;
+  transition: color 0.15s;
+}
+
+.nav-item.active {
+  color: var(--primary-burgundy);
+}
+
+[data-theme="dark"] .nav-item.active {
+  color: var(--gold-light);
+}
+
+.nav-icon {
+  font-size: 20px;
+}
+
+/* MODAL & DIALOGS */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modal-overlay.active {
+  display: flex;
+}
+
+.modal-sheet {
+  background-color: var(--surface);
+  width: 100%;
+  max-width: 650px;
+  border-radius: 20px 20px 0 0;
+  padding: 24px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 -4px 25px rgba(0, 0, 0, 0.15);
+  animation: slideUp 0.25s ease-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+/* COLOR SELECTOR CIRCLES */
+.colors-row {
+  display: flex;
+  justify-content: space-around;
+  margin: 16px 0 24px;
+}
+
+.color-circle-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+}
+
+.color-circle-btn:hover {
+  transform: scale(1.1);
+}
+
+.color-circle-btn.selected {
+  border-color: var(--text);
+}
+
+.btn-verde { background-color: #10b981; }
+.btn-amarelo { background-color: #f59e0b; }
+.btn-azul { background-color: #3b82f6; }
+.btn-laranja { background-color: #f97316; }
+.btn-rosa { background-color: #ec4899; }
+
+/* FLOATING BUTTON */
+.fab {
+  position: fixed;
+  bottom: 80px;
+  right: 24px;
+  background-color: var(--primary-burgundy);
+  color: #ffffff;
+  border: none;
+  border-radius: 28px;
+  padding: 14px 22px;
+  font-weight: bold;
+  font-size: 15px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(107, 29, 47, 0.4);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
