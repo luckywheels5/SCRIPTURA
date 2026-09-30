@@ -5,157 +5,230 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Scriptura — A Bíblia Sagrada (ACF)</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23ba2026'/><text x='50' y='68' font-size='56' font-family='sans-serif' font-weight='900' fill='white' text-anchor='middle'>S</text></svg>">
 </head>
 <body>
 
 <div id="app-container">
 
-  <!-- CABEÇALHO YOUVERSION -->
+  <!-- CABEÇALHO YOUVERSION DESKTOP & MOBILE -->
   <header id="app-header">
     <div class="header-left">
-      <div class="yv-logo-badge" title="Scriptura">S</div>
-      <!-- Pílula de Livro e Capítulo -->
+      <div class="yv-brand" onclick="switchTab('bible')" title="Scriptura — Início">
+        <div class="yv-logo-badge">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path d="M19 2H6c-1.2 0-2 .8-2 2v16c0 1.2.8 2 2 2h13c.6 0 1-.4 1-1V3c0-.6-.4-1-1-1zm-1 18H6c-.6 0-1-.4-1-1s.4-1 1-1h12v2zm0-4H6c-1.7 0-3 1.3-3 3V4c0-.6.4-1 1-1h14v13z"/>
+          </svg>
+        </div>
+        <span class="brand-name">SCRIPTURA</span>
+      </div>
+
+      <!-- NAVEGAÇÃO PRINCIPAL DESKTOP (YOUVERSION WEB) -->
+      <nav class="desktop-nav-menu">
+        <button class="desktop-nav-link active" data-tab="bible">
+          <span>Bíblia</span>
+        </button>
+        <button class="desktop-nav-link" data-tab="devotionals">
+          <span>Planos</span>
+        </button>
+        <button class="desktop-nav-link" data-tab="prayers">
+          <span>Orações</span>
+        </button>
+        <button class="desktop-nav-link" data-tab="progress">
+          <span>Progresso</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- SELETOR CENTRAL DE LIVRO / CAPÍTULO / TRADUÇÃO (DESKTOP & MOBILE) -->
+    <div class="header-center">
       <button id="header-title-btn" class="yv-pill-btn" title="Selecionar Livro e Capítulo">
-        <span>Carregando...</span> <span style="font-size: 11px; opacity: 0.7;">▼</span>
+        <span id="header-book-chap-label">Carregando...</span>
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
       </button>
-      <!-- Pílula de Tradução -->
-      <div class="yv-pill-btn" style="cursor: default; padding: 8px 10px; font-size: 12px; font-weight: 800; color: var(--yv-red);">
-        ACF
+
+      <div class="yv-pill-btn yv-version-pill" title="Tradução Almeida Corrigida Fiel">
+        <span class="version-code">ACF</span>
       </div>
     </div>
 
+    <!-- AÇÕES NO TOPO DIREITO -->
     <div class="header-actions">
-      <button id="btn-toggle-complete" class="icon-btn" title="Marcar como Lido">✓</button>
-      <button id="btn-settings" class="icon-btn" title="Fontes e Configurações">Aa</button>
+      <button id="btn-toggle-complete" class="yv-header-btn complete-btn" title="Marcar Capítulo como Lido">
+        <span class="btn-check-icon">✓</span>
+        <span class="desktop-btn-label">Lido</span>
+      </button>
+      <button id="btn-settings" class="yv-header-btn" title="Ajustes de Leitura (Aa)">
+        <span style="font-weight: 700; font-size: 15px;">Aa</span>
+      </button>
+      <button id="btn-header-profile" class="yv-header-profile-btn" onclick="switchTab('progress')" title="Perfil do Leitor">
+        <div class="profile-avatar">S</div>
+      </button>
     </div>
   </header>
 
   <!-- CONTAINER DE TELAS -->
   <main id="views-container">
 
-    <!-- 1. LEITOR BÍBLICO (TEXTO FLUIDO YOUVERSION) -->
+    <!-- 1. LEITOR BÍBLICO (TEXTO FLUIDO YOUVERSION NO PC) -->
     <section id="view-bible" class="view-section active">
-      <div id="reader-header-banner">
-        <span class="acf-badge">ALMEIDA CORRIGIDA FIEL</span>
-        <span style="font-size: 12px; color: var(--text-secondary);">Leitura Contínua</span>
-      </div>
+      
+      <!-- BOTOES LATERAIS FLUTUANTES NO DESKTOP (< e >) -->
+      <button id="desktop-prev-chap" class="desktop-side-nav-btn prev" title="Capítulo Anterior (Seta Esquerda ←)">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+          <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+        </svg>
+      </button>
 
-      <!-- Toast de Conclusão de Leitura -->
-      <div id="reading-completion-toast">
-        <span style="font-size: 18px;">✓</span>
-        <span>Capítulo concluído com sucesso por tempo e rolagem!</span>
-      </div>
+      <button id="desktop-next-chap" class="desktop-side-nav-btn next" title="Próximo Capítulo (Seta Direita →)">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+          <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+        </svg>
+      </button>
 
-      <!-- Versículos -->
-      <div id="verses-list"></div>
+      <div class="reader-layout-wrap">
+        <!-- CABEÇALHO DO CAPÍTULO DESKTOP -->
+        <div class="reader-chapter-title-wrap">
+          <h1 id="desktop-chapter-title" class="reader-chapter-heading">Gênesis 1</h1>
+          <div class="reader-version-sub">ALMEIDA CORRIGIDA FIEL (ACF)</div>
+        </div>
 
-      <!-- Navegação Anterior / Próximo -->
-      <div class="chapter-nav-footer">
-        <button id="btn-prev-chap" class="btn-nav">← Anterior</button>
-        <button id="btn-next-chap" class="btn-nav primary">Próximo Capítulo →</button>
+        <!-- Toast de Conclusão Automática de Leitura -->
+        <div id="reading-completion-toast">
+          <span style="font-size: 18px;">✓</span>
+          <span>Capítulo concluído com sucesso por tempo e rolagem!</span>
+        </div>
+
+        <!-- Lista Contínua de Versículos -->
+        <div id="verses-list" class="reader-text-container"></div>
+
+        <!-- Navegação Anterior / Próximo no Rodapé -->
+        <div class="chapter-nav-footer">
+          <button id="btn-prev-chap" class="btn-nav">← Anterior</button>
+          <button id="btn-next-chap" class="btn-nav primary">Próximo Capítulo →</button>
+        </div>
       </div>
     </section>
 
     <!-- 2. DEVOCIONAIS & PLANOS -->
     <section id="view-devotionals" class="view-section">
-      <div class="yv-featured-banner">
-        <div style="font-size: 11px; font-weight: 800; letter-spacing: 1.5px; opacity: 0.9; text-transform: uppercase;">
-          Plano de Leitura & Reflexão
+      <div class="content-desktop-wrap">
+        <div class="yv-featured-banner">
+          <div class="banner-tag">PLANO DE LEITURA & REFLEXÃO REFORMADA</div>
+          <h2>Devocionais Clássicos</h2>
+          <p>Alimente sua alma diariamente com meditações sólidas dos maiores mestres da fé cristã bíblica (Charles Spurgeon, João Calvino, Thomas Watson, J.C. Ryle e John Owen), fundamentadas no texto da ACF.</p>
         </div>
-        <h2>Devocionais Reformados</h2>
-        <p>Alimente sua fé com reflexões clássicas da teologia reformada (acervo Monergismo) fundamentadas estritamente na versão ACF.</p>
-      </div>
 
-      <div id="devotionals-feed"></div>
+        <div id="devotionals-feed" class="devotionals-grid"></div>
+      </div>
     </section>
 
     <!-- 3. MURAL DE ORAÇÕES (YOUVERSION PRAYER) -->
     <section id="view-prayers" class="view-section">
-      <div class="tab-pills">
-        <button id="tab-active-prayers" class="tab-pill active">
-          Orações Ativas (<span id="count-active-prayers">0</span>)
-        </button>
-        <button id="tab-answered-prayers" class="tab-pill">
-          Respondidas (<span id="count-answered-prayers">0</span>)
-        </button>
+      <div class="content-desktop-wrap">
+        <div class="prayer-section-header">
+          <div>
+            <h2 style="font-size: 24px; font-weight: 800; letter-spacing: -0.5px;">Mural de Orações</h2>
+            <p style="font-size: 14px; color: var(--text-secondary); margin-top: 4px;">Leve seus pedidos diante do trono da graça com petições e ações de graças.</p>
+          </div>
+          <button id="btn-header-new-prayer" class="btn-nav primary" onclick="openNewPrayerModal()">
+            <span>+ Nova Oração</span>
+          </button>
+        </div>
+
+        <div class="tab-pills" style="margin-top: 18px; margin-bottom: 24px;">
+          <button id="tab-active-prayers" class="tab-pill active">
+            Orações Ativas (<span id="count-active-prayers">0</span>)
+          </button>
+          <button id="tab-answered-prayers" class="tab-pill">
+            Respondidas (<span id="count-answered-prayers">0</span>)
+          </button>
+        </div>
+
+        <div id="prayers-list" class="prayers-grid"></div>
       </div>
 
-      <div id="prayers-list"></div>
-
-      <button id="btn-new-prayer-fab" class="fab">
+      <!-- FAB para Mobile -->
+      <button id="btn-new-prayer-fab" class="fab mobile-only">
         <span style="font-size: 18px;">+</span> <span>Adicionar Oração</span>
       </button>
     </section>
 
     <!-- 4. PROGRESSO & ATIVIDADE (YOUVERSION PROFILE) -->
     <section id="view-progress" class="view-section">
-      <!-- Card do Usuário -->
-      <div class="yv-card" style="margin-bottom: 24px;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <h3 id="user-profile-name" style="font-size: 18px; font-weight: 700;">Leitor das Escrituras</h3>
-              <button id="btn-edit-name" style="border: none; background: none; cursor: pointer; color: var(--text-secondary); font-size: 14px;">✎</button>
+      <div class="content-desktop-wrap">
+        <!-- Card do Usuário -->
+        <div class="yv-card user-summary-card">
+          <div class="user-summary-inner">
+            <div class="user-avatar-large">S</div>
+            <div class="user-info-col">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <h3 id="user-profile-name" style="font-size: 20px; font-weight: 800;">Leitor das Escrituras</h3>
+                <button id="btn-edit-name" class="icon-text-btn" title="Alterar Nome">✎ Editar</button>
+              </div>
+              <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">
+                ID do Leitor: <span id="user-profile-id" style="font-family: monospace;"></span>
+              </div>
             </div>
-            <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
-              ID: <span id="user-profile-id"></span>
+            <span class="acf-badge-pill">LEITOR ATIVO ACF</span>
+          </div>
+        </div>
+
+        <!-- Metas de Leitura -->
+        <div class="yv-card" style="margin-bottom: 28px;">
+          <div style="font-weight: 800; font-size: 16px; margin-bottom: 20px; letter-spacing: 0.3px;">
+            PROGRESSO NA LEITURA BÍBLICA
+          </div>
+
+          <div class="progress-bar-container">
+            <div class="progress-header">
+              <span style="font-weight: 600;">Bíblia Sagrada Completa</span>
+              <span id="prog-bible-pct" style="font-weight: 700;">0%</span>
+            </div>
+            <div class="progress-track">
+              <div id="prog-bible-bar" class="progress-fill" style="width: 0%;"></div>
+            </div>
+            <div id="prog-bible-text" class="progress-subtext">0 de 1.189 capítulos lidos</div>
+          </div>
+
+          <div class="progress-grid-split">
+            <div class="progress-bar-container">
+              <div class="progress-header">
+                <span>Antigo Testamento</span>
+                <span id="prog-ot-pct" style="font-weight: 700;">0%</span>
+              </div>
+              <div class="progress-track">
+                <div id="prog-ot-bar" class="progress-fill" style="width: 0%; background-color: #f59e0b;"></div>
+              </div>
+              <div id="prog-ot-text" class="progress-subtext">0 de 929 capítulos</div>
+            </div>
+
+            <div class="progress-bar-container">
+              <div class="progress-header">
+                <span>Novo Testamento</span>
+                <span id="prog-nt-pct" style="font-weight: 700;">0%</span>
+              </div>
+              <div class="progress-track">
+                <div id="prog-nt-bar" class="progress-fill" style="width: 0%; background-color: #10b981;"></div>
+              </div>
+              <div id="prog-nt-text" class="progress-subtext">0 de 260 capítulos</div>
             </div>
           </div>
-          <span class="acf-badge">LEITOR ATIVO</span>
         </div>
+
+        <!-- Destaques Salvos -->
+        <div class="highlights-section-head">
+          <div style="font-weight: 800; font-size: 16px;">SEUS VERSÍCULOS MARCADOS</div>
+          <div style="font-size: 13px; color: var(--text-secondary);">5 Cores Oficiais YouVersion</div>
+        </div>
+        <div id="all-highlights-list" class="highlights-container"></div>
       </div>
-
-      <!-- Metas de Leitura -->
-      <div class="yv-card" style="margin-bottom: 24px;">
-        <div style="font-weight: 700; font-size: 15px; margin-bottom: 18px;">
-          📊 PROGRESSO NA BÍBLIA SAGRADA
-        </div>
-
-        <div class="progress-bar-container">
-          <div class="progress-header">
-            <span>Bíblia Completa</span>
-            <span id="prog-bible-pct">0%</span>
-          </div>
-          <div class="progress-track">
-            <div id="prog-bible-bar" class="progress-fill" style="width: 0%;"></div>
-          </div>
-          <div id="prog-bible-text" style="font-size: 11px; color: var(--text-muted); margin-top: 5px;">0 de 1.189 capítulos</div>
-        </div>
-
-        <div class="progress-bar-container">
-          <div class="progress-header">
-            <span>Antigo Testamento</span>
-            <span id="prog-ot-pct">0%</span>
-          </div>
-          <div class="progress-track">
-            <div id="prog-ot-bar" class="progress-fill" style="width: 0%; background-color: #f59e0b;"></div>
-          </div>
-          <div id="prog-ot-text" style="font-size: 11px; color: var(--text-muted); margin-top: 5px;">0 de 929 capítulos</div>
-        </div>
-
-        <div class="progress-bar-container">
-          <div class="progress-header">
-            <span>Novo Testamento</span>
-            <span id="prog-nt-pct">0%</span>
-          </div>
-          <div class="progress-track">
-            <div id="prog-nt-bar" class="progress-fill" style="width: 0%; background-color: #10b981;"></div>
-          </div>
-          <div id="prog-nt-text" style="font-size: 11px; color: var(--text-muted); margin-top: 5px;">0 de 260 capítulos</div>
-        </div>
-      </div>
-
-      <!-- Destaques Salvos -->
-      <div style="margin-bottom: 12px; font-weight: 700; font-size: 15px;">
-        🎨 SEUS VERSÍCULOS MARCADOS
-      </div>
-      <div id="all-highlights-list"></div>
     </section>
 
   </main>
 
-  <!-- BARRA INFERIOR YOUVERSION -->
-  <nav id="bottom-nav">
+  <!-- BARRA INFERIOR APENAS PARA MOBILE (OCULTADA NO DESKTOP PC) -->
+  <nav id="bottom-nav" class="mobile-only">
     <button class="nav-item active" data-tab="bible">
       <span class="nav-icon">📖</span>
       <span>Bíblia</span>
@@ -176,125 +249,107 @@
 
 </div>
 
-<!-- MODAL: SELETOR DE LIVRO E CAPÍTULO -->
-<div id="modal-book-picker" class="modal-overlay">
-  <div class="modal-sheet">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-      <h3 id="book-picker-title" style="font-size: 18px; font-weight: 700;">Selecionar Livro</h3>
-      <button class="icon-btn" onclick="closeModal('modal-book-picker')">✕</button>
-    </div>
-    <div class="tab-pills" style="margin-bottom: 14px;">
-      <button id="tab-ot-btn" class="tab-pill active" onclick="selectTestamentTab('at')">Antigo Testamento (39)</button>
-      <button id="tab-nt-btn" class="tab-pill" onclick="selectTestamentTab('nt')">Novo Testamento (27)</button>
-    </div>
-    <div id="book-picker-list" style="max-height: 55vh; overflow-y: auto;"></div>
+<!-- FLOATING ACTION DOCK YOUVERSION NO PC (BARRA INFERIOR MODERNA AO CLICAR EM VERSÍCULO) -->
+<div id="verse-action-dock" class="verse-action-dock">
+  <div class="dock-left-info">
+    <span class="dock-badge">ACF</span>
+    <span id="dock-verse-ref" class="dock-ref-text">Romanos 8:28</span>
+  </div>
+
+  <!-- 5 Cores YouVersion + Borracha -->
+  <div class="dock-colors-palette">
+    <button class="color-dot-btn btn-amarelo" data-color="amarelo" title="Destacar em Amarelo"></button>
+    <button class="color-dot-btn btn-verde" data-color="verde" title="Destacar em Verde"></button>
+    <button class="color-dot-btn btn-azul" data-color="azul" title="Destacar em Azul"></button>
+    <button class="color-dot-btn btn-laranja" data-color="laranja" title="Destacar em Laranja"></button>
+    <button class="color-dot-btn btn-rosa" data-color="rosa" title="Destacar em Rosa"></button>
+    <button id="dock-btn-remove-hl" class="color-dot-btn btn-remove-hl" title="Remover Destaque">✕</button>
+  </div>
+
+  <div class="dock-actions-row">
+    <button id="dock-btn-copy" class="dock-act-btn" title="Copiar Versículo">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+      <span>Copiar</span>
+    </button>
+    <button id="dock-btn-prayer" class="dock-act-btn" title="Orar com este Versículo">
+      <span>🙏</span>
+      <span>Orar</span>
+    </button>
+    <button id="dock-btn-close" class="dock-close-btn" title="Fechar barra">✕</button>
   </div>
 </div>
 
-<!-- FLOATING ACTION SHEET YOUVERSION (AO TOCAR NO VERSÍCULO) -->
-<div id="modal-highlight" class="modal-overlay">
-  <div class="modal-sheet">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-      <h3 id="modal-hl-ref" style="font-size: 17px; font-weight: 700;">Versículo</h3>
-      <button class="icon-btn" onclick="closeModal('modal-highlight')">✕</button>
+<!-- MODAL: SELETOR DE LIVRO E CAPÍTULO (DESIGN MODERNO DESKTOP & MOBILE) -->
+<div id="modal-book-picker" class="modal-overlay">
+  <div class="modal-sheet book-picker-sheet">
+    <div class="picker-header">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <button id="btn-back-to-books" class="icon-btn" style="display: none;" onclick="backToBookList()" title="Voltar aos livros">←</button>
+        <h3 id="book-picker-title" style="font-size: 19px; font-weight: 800;">Selecionar Livro</h3>
+      </div>
+      <button class="icon-btn" onclick="closeModal('modal-book-picker')">✕</button>
     </div>
 
-    <div id="modal-hl-text" style="font-size: 15px; font-style: italic; line-height: 1.5; margin-bottom: 18px; background: var(--surface-secondary); padding: 14px; border-radius: 12px;"></div>
-
-    <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); letter-spacing: 0.8px; margin-bottom: 10px; text-transform: uppercase;">
-      Marca-texto
+    <!-- Campo de Busca Rápida de Livro -->
+    <div id="picker-search-container" style="margin-bottom: 12px;">
+      <input type="text" id="book-search-input" placeholder="🔍 Filtrar livro (ex: Romanos, João, Salmos)..." class="picker-search-input">
     </div>
 
-    <!-- 5 Cores do YouVersion -->
-    <div class="colors-row">
-      <button class="color-circle-btn btn-amarelo" data-color="amarelo" title="Amarelo"></button>
-      <button class="color-circle-btn btn-verde" data-color="verde" title="Verde"></button>
-      <button class="color-circle-btn btn-azul" data-color="azul" title="Azul"></button>
-      <button class="color-circle-btn btn-laranja" data-color="laranja" title="Laranja"></button>
-      <button class="color-circle-btn btn-rosa" data-color="rosa" title="Rosa"></button>
+    <div id="picker-testament-tabs" class="tab-pills" style="margin-bottom: 14px;">
+      <button id="tab-ot-btn" class="tab-pill active" onclick="selectTestamentTab('at')">Antigo Testamento (39)</button>
+      <button id="tab-nt-btn" class="tab-pill" onclick="selectTestamentTab('nt')">Novo Testamento (27)</button>
     </div>
 
-    <!-- Grade de Ações Estilo YouVersion -->
-    <div class="yv-actions-grid">
-      <button id="btn-modal-copy-verse" class="yv-action-btn">
-        <div class="yv-action-icon">📋</div>
-        <span>Copiar</span>
-      </button>
-
-      <button id="btn-modal-prayer-verse" class="yv-action-btn">
-        <div class="yv-action-icon">🙏</div>
-        <span>Orar</span>
-      </button>
-
-      <button id="btn-modal-remove-hl" class="yv-action-btn">
-        <div class="yv-action-icon" style="color: #ef4444;">🗑️</div>
-        <span>Remover</span>
-      </button>
-
-      <button class="yv-action-btn" onclick="closeModal('modal-highlight')">
-        <div class="yv-action-icon">✕</div>
-        <span>Fechar</span>
-      </button>
-    </div>
+    <div id="book-picker-list" class="picker-scroll-area"></div>
   </div>
 </div>
 
 <!-- MODAL: AJUSTES DE LEITURA (Aa) -->
 <div id="modal-settings" class="modal-overlay">
-  <div class="modal-sheet">
+  <div class="modal-sheet settings-sheet">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-      <h3 style="font-size: 18px; font-weight: 700;">Ajustes de Leitura</h3>
+      <h3 style="font-size: 18px; font-weight: 800;">Ajustes de Leitura</h3>
       <button class="icon-btn" onclick="closeModal('modal-settings')">✕</button>
     </div>
 
-    <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); letter-spacing: 0.8px; margin-bottom: 10px; text-transform: uppercase;">
-      Tema de Fundo
-    </div>
+    <div class="settings-group-label">Tema de Fundo</div>
     <div class="tab-pills" style="margin-bottom: 24px;">
       <button class="tab-pill theme-opt-btn" data-theme="light">Claro</button>
       <button class="tab-pill theme-opt-btn" data-theme="sepia">Sépia</button>
       <button class="tab-pill theme-opt-btn" data-theme="dark">Escuro</button>
     </div>
 
-    <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); letter-spacing: 0.8px; margin-bottom: 10px; text-transform: uppercase;">
-      Tamanho da Fonte
-    </div>
+    <div class="settings-group-label">Tamanho da Fonte</div>
     <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 24px;">
-      <span style="font-size: 14px;">A</span>
+      <span style="font-size: 14px; font-weight: bold;">A</span>
       <input type="range" id="font-size-slider" min="15" max="28" value="19" style="flex: 1; accent-color: var(--yv-red);">
-      <span style="font-size: 22px; font-weight: 700;">A</span>
+      <span style="font-size: 24px; font-weight: 900;">A</span>
     </div>
 
-    <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); letter-spacing: 0.8px; margin-bottom: 10px; text-transform: uppercase;">
-      Tipo de Fonte
-    </div>
+    <div class="settings-group-label">Tipografia da Bíblia</div>
     <div style="display: flex; gap: 10px;">
-      <button id="btn-font-sans" class="btn-nav" style="flex: 1; font-family: -apple-system, sans-serif;">Sem Serifa (Moderna)</button>
-      <button id="btn-font-serif" class="btn-nav" style="flex: 1; font-family: Georgia, serif;">Com Serifa (Livro)</button>
+      <button id="btn-font-serif" class="btn-nav" style="flex: 1; font-family: Georgia, serif; font-size: 14px;">Com Serifa (Livro Clássico)</button>
+      <button id="btn-font-sans" class="btn-nav" style="flex: 1; font-family: -apple-system, sans-serif; font-size: 14px;">Sem Serifa (Moderna)</button>
     </div>
   </div>
 </div>
 
 <!-- MODAL: NOVA ORAÇÃO -->
 <div id="modal-new-prayer" class="modal-overlay">
-  <div class="modal-sheet">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-      <h3 style="font-size: 18px; font-weight: 700;">Novo Pedido de Oração</h3>
+  <div class="modal-sheet prayer-sheet">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+      <h3 style="font-size: 19px; font-weight: 800;">Novo Pedido de Oração</h3>
       <button class="icon-btn" onclick="closeModal('modal-new-prayer')">✕</button>
     </div>
     <div style="margin-bottom: 16px;">
-      <label style="display: block; font-size: 11px; font-weight: 700; color: var(--text-secondary); letter-spacing: 0.5px; margin-bottom: 6px;">
-        TÍTULO DA ORAÇÃO *
-      </label>
-      <input type="text" id="prayer-title-input" placeholder="Ex: Família, saúde, decisões..." style="width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 15px;">
+      <label class="settings-group-label">TÍTULO DA ORAÇÃO *</label>
+      <input type="text" id="prayer-title-input" placeholder="Ex: Família, saúde, gratidão, discernimento..." class="modal-text-input">
     </div>
     <div style="margin-bottom: 20px;">
-      <label style="display: block; font-size: 11px; font-weight: 700; color: var(--text-secondary); letter-spacing: 0.5px; margin-bottom: 6px;">
-        DETALHES / PASSAGEM BÍBLICA
-      </label>
-      <textarea id="prayer-desc-input" rows="4" placeholder="Escreva os detalhes da sua súplica diante de Deus..." style="width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 14px; resize: vertical;"></textarea>
+      <label class="settings-group-label">DETALHES / PASSAGEM BÍBLICA</label>
+      <textarea id="prayer-desc-input" rows="4" placeholder="Escreva os motivos ou versículo que sustentam sua oração..." class="modal-text-input" style="resize: vertical;"></textarea>
     </div>
-    <div style="display: flex; justify-content: flex-end; gap: 10px;">
+    <div style="display: flex; justify-content: flex-end; gap: 12px;">
       <button class="btn-nav" onclick="closeModal('modal-new-prayer')">Cancelar</button>
       <button id="btn-save-prayer" class="btn-nav primary">Salvar Oração</button>
     </div>

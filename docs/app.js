@@ -1,6 +1,6 @@
 /**
- * SCRIPTURA APP — Lógica de Frontend Universal (Local & GitHub Pages)
- * Funciona conectado à API local ou de forma 100% estática via bible.min.json no GitHub Pages!
+ * SCRIPTURA APP — Lógica de Frontend Universal YouVersion Desktop & Mobile
+ * Totalmente compatível com servidor local Python ou estático no GitHub Pages via bible.min.json!
  */
 
 const state = {
@@ -16,7 +16,7 @@ const state = {
   chapterHighlights: {},
   completedChapters: new Set(),
   theme: "light",
-  fontSize: 19,
+  fontSize: 20,
   isSerif: true,
   prayers: [],
   prayerTab: "active",
@@ -31,7 +31,9 @@ const state = {
   activeVerseForModal: null,
 };
 
-// Devocionais embutidos para modo estático (GitHub Pages)
+let currentTestamentTab = "at";
+
+// Devocionais Clássicos Reformados embutidos
 const STATIC_DEVOTIONALS = [
   {
     id: 1,
@@ -107,6 +109,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupNavigation();
   setupScrollObserver();
   setupModals();
+  setupDockActions();
+  setupKeyboardShortcuts();
 
   await checkModeAndLoadBooks();
   await loadCurrentChapter();
@@ -118,35 +122,34 @@ function initUser() {
   let name = localStorage.getItem("scriptura_user_name");
 
   if (!uid) {
-    uid = "user-" + Math.random().toString(36).substring(2, 11) + "-" + Date.now();
+    uid = "usr_" + Math.random().toString(36).substring(2, 10);
     localStorage.setItem("scriptura_user_id", uid);
   }
-  if (!name) {
-    name = "Leitor das Escrituras";
-    localStorage.setItem("scriptura_user_name", name);
-  }
-
   state.userId = uid;
-  state.userName = name;
+
+  if (name) {
+    state.userName = name;
+  }
+  const nameEl = document.getElementById("user-profile-name");
+  if (nameEl) nameEl.innerText = state.userName;
+  const idEl = document.getElementById("user-profile-id");
+  if (idEl) idEl.innerText = state.userId;
 }
 
 function loadSavedSettings() {
-  const savedTheme = localStorage.getItem("scriptura_theme") || "light";
-  const savedFontSize = parseInt(localStorage.getItem("scriptura_font_size") || "19", 10);
-  const savedSerif = localStorage.getItem("scriptura_is_serif") !== "false";
+  const theme = localStorage.getItem("scriptura_theme") || "light";
+  applyTheme(theme);
 
-  const savedBookId = parseInt(localStorage.getItem("scriptura_last_book_id") || "1", 10);
-  const savedChapter = parseInt(localStorage.getItem("scriptura_last_chapter") || "1", 10);
+  const fontSize = parseInt(localStorage.getItem("scriptura_font_size"), 10) || 20;
+  applyFontSize(fontSize);
 
-  state.theme = savedTheme;
-  state.fontSize = savedFontSize;
-  state.isSerif = savedSerif;
+  const isSerif = localStorage.getItem("scriptura_is_serif") !== "false";
+  applyFontFamily(isSerif);
+
+  const savedBookId = parseInt(localStorage.getItem("scriptura_last_book_id"), 10) || 1;
+  const savedChapter = parseInt(localStorage.getItem("scriptura_last_chapter"), 10) || 1;
+
   state.currentChapter = savedChapter;
-
-  applyTheme(savedTheme);
-  applyFontSize(savedFontSize);
-  applyFontFamily(savedSerif);
-
   state.savedBookId = savedBookId;
 }
 
@@ -166,7 +169,7 @@ function applyFontFamily(isSerif) {
   state.isSerif = isSerif;
   document.documentElement.style.setProperty(
     "--font-family",
-    isSerif ? "Georgia, serif" : "-apple-system, sans-serif"
+    isSerif ? "Georgia, serif" : "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
   );
   localStorage.setItem("scriptura_is_serif", isSerif);
 }
@@ -184,7 +187,7 @@ async function checkModeAndLoadBooks() {
       throw new Error("API não disponível");
     }
   } catch (e) {
-    // Modo estático (GitHub Pages / sem servidor)
+    // Modo estático (GitHub Pages / sem servidor Python)
     state.isStaticMode = true;
     console.log("Iniciando em modo estático (GitHub Pages / bible.min.json)...");
     const jsonRes = await fetch("bible.min.json");
@@ -206,44 +209,62 @@ async function checkModeAndLoadBooks() {
 }
 
 // ==========================================
-// NAVEGAÇÃO DE ABAS
+// NAVEGAÇÃO DE ABAS (DESKTOP & MOBILE)
 // ==========================================
 function setupNavigation() {
+  // Mobile bottom nav
   const navBtns = document.querySelectorAll(".nav-item");
   navBtns.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const tab = btn.dataset.tab;
-      switchTab(tab);
-    });
+    btn.addEventListener("click", () => switchTab(btn.dataset.tab));
+  });
+
+  // Desktop top navbar
+  const desktopNavBtns = document.querySelectorAll(".desktop-nav-link");
+  desktopNavBtns.forEach((btn) => {
+    btn.addEventListener("click", () => switchTab(btn.dataset.tab));
   });
 }
 
 function switchTab(tab) {
   state.currentTab = tab;
+
+  // Atualiza botões ativos (mobile e desktop)
   document.querySelectorAll(".nav-item").forEach((b) => {
     b.classList.toggle("active", b.dataset.tab === tab);
   });
+  document.querySelectorAll(".desktop-nav-link").forEach((b) => {
+    b.classList.toggle("active", b.dataset.tab === tab);
+  });
+
+  // Alterna seções
   document.querySelectorAll(".view-section").forEach((sec) => {
     sec.classList.remove("active");
   });
   const activeSec = document.getElementById("view-" + tab);
   if (activeSec) activeSec.classList.add("active");
 
-  const headerTitle = document.getElementById("header-title-btn");
+  closeVerseDock();
+
   if (tab === "bible") {
     if (state.currentBook) {
-      headerTitle.innerHTML = `<span>${state.currentBook.name} ${state.currentChapter}</span> <span style="font-size:12px;">▾</span>`;
+      updateChapterTitles();
     }
   } else if (tab === "devotionals") {
-    headerTitle.innerHTML = `<span>Devocionais Reformados</span>`;
     loadDevotionals();
   } else if (tab === "prayers") {
-    headerTitle.innerHTML = `<span>Mural de Orações</span>`;
     loadPrayers();
   } else if (tab === "progress") {
-    headerTitle.innerHTML = `<span>Progresso & Destaques</span>`;
     loadProgressView();
   }
+}
+window.switchTab = switchTab;
+
+function updateChapterTitles() {
+  if (!state.currentBook) return;
+  const label = document.getElementById("header-book-chap-label");
+  if (label) label.innerText = `${state.currentBook.name} ${state.currentChapter}`;
+  const desktopHeading = document.getElementById("desktop-chapter-title");
+  if (desktopHeading) desktopHeading.innerText = `${state.currentBook.name} ${state.currentChapter}`;
 }
 
 // ==========================================
@@ -252,8 +273,7 @@ function switchTab(tab) {
 async function loadCurrentChapter() {
   if (!state.currentBook) return;
 
-  const headerTitle = document.getElementById("header-title-btn");
-  headerTitle.innerHTML = `<span>${state.currentBook.name} ${state.currentChapter}</span> <span style="font-size:12px;">▾</span>`;
+  updateChapterTitles();
 
   localStorage.setItem("scriptura_last_book_id", state.currentBook.id);
   localStorage.setItem("scriptura_last_chapter", state.currentChapter);
@@ -261,19 +281,22 @@ async function loadCurrentChapter() {
   state.readStartTime = Date.now();
   state.reachedBottom = false;
   state.autoCompletedDone = false;
-  document.getElementById("reading-completion-toast").classList.remove("visible");
+  closeVerseDock();
+
+  const toast = document.getElementById("reading-completion-toast");
+  if (toast) toast.classList.remove("visible");
 
   updateCompletionCheckmark();
   await loadChapterHighlights();
 
   const versesContainer = document.getElementById("verses-list");
   versesContainer.innerHTML =
-    '<div style="text-align:center; padding:30px; color:gray;">Carregando Escrituras...</div>';
+    '<div style="text-align:center; padding:40px; color:var(--text-muted); font-size:16px;">Carregando as Sagradas Escrituras...</div>';
 
   if (state.isStaticMode) {
     const bookIdx = state.currentBook.id - 1;
     const chapterIdx = state.currentChapter - 1;
-    const rawVerses = state.staticBibleData[bookIdx].c[chapterIdx] || [];
+    const rawVerses = state.staticBibleData[bookIdx]?.c[chapterIdx] || [];
     state.verses = rawVerses.map((text, i) => ({
       id: i + 1,
       number: i + 1,
@@ -289,7 +312,7 @@ async function loadCurrentChapter() {
       state.verses = data.verses || [];
       renderVerses();
     } catch (err) {
-      versesContainer.innerHTML = `<div style="color:red; text-align:center;">Erro ao carregar versículos: ${err.message}</div>`;
+      versesContainer.innerHTML = `<div style="color:var(--yv-red); text-align:center; padding:30px;">Erro ao carregar versículos: ${err.message}</div>`;
     }
   }
 }
@@ -300,33 +323,194 @@ function renderVerses() {
 
   state.verses.forEach((v) => {
     const hlColor = state.chapterHighlights[v.number];
-    const div = document.createElement("div");
-    div.className = "verse-item" + (hlColor ? ` hl-${hlColor}` : "");
-    div.dataset.verse = v.number;
-    div.innerHTML = `<span class="verse-num">${v.number}</span><span class="verse-text">${v.text}</span>`;
-    div.addEventListener("click", () => openHighlightModal(v));
-    container.appendChild(div);
+    const span = document.createElement("span");
+    span.className = "verse-item" + (hlColor ? ` hl-${hlColor}` : "");
+    span.dataset.verse = v.number;
+    span.innerHTML = `<sup class="verse-num">${v.number}</sup><span class="verse-text">${v.text}</span> `;
+    span.addEventListener("click", () => selectVerse(v, span));
+    container.appendChild(span);
   });
+
+  updateNavButtonsState();
+
+  const viewsContainer = document.getElementById("views-container");
+  if (viewsContainer) viewsContainer.scrollTop = 0;
+}
+
+// Atualiza o estado das setas de navegação (desktop e rodapé)
+function updateNavButtonsState() {
+  if (!state.currentBook || state.books.length === 0) return;
+
+  const isFirst = state.currentBook.id === state.books[0].id && state.currentChapter === 1;
+  const lastBook = state.books[state.books.length - 1];
+  const isLast = state.currentBook.id === lastBook.id && state.currentChapter === lastBook.chapter_count;
+
+  const prevBtn = document.getElementById("desktop-prev-chap");
+  const nextBtn = document.getElementById("desktop-next-chap");
+  if (prevBtn) prevBtn.style.opacity = isFirst ? "0.3" : "1";
+  if (nextBtn) nextBtn.style.opacity = isLast ? "0.3" : "1";
 
   const btnPrev = document.getElementById("btn-prev-chap");
   const btnNext = document.getElementById("btn-next-chap");
+  if (btnPrev) {
+    btnPrev.style.visibility = isFirst ? "hidden" : "visible";
+    btnPrev.innerText = state.currentChapter > 1 
+      ? `← Capítulo ${state.currentChapter - 1}` 
+      : `← Livro Anterior`;
+  }
+  if (btnNext) {
+    btnNext.style.visibility = isLast ? "hidden" : "visible";
+    btnNext.innerText = state.currentChapter < state.currentBook.chapter_count 
+      ? `Capítulo ${state.currentChapter + 1} →` 
+      : `Próximo Livro →`;
+  }
+}
 
+// Navegação de capítulos contínua (estilo YouVersion Desktop)
+async function goToPreviousChapter() {
+  if (!state.currentBook) return;
   if (state.currentChapter > 1) {
-    btnPrev.style.visibility = "visible";
-    btnPrev.innerText = `← Capítulo ${state.currentChapter - 1}`;
+    state.currentChapter--;
+    await loadCurrentChapter();
   } else {
-    btnPrev.style.visibility = "hidden";
+    const currentIdx = state.books.findIndex((b) => b.id === state.currentBook.id);
+    if (currentIdx > 0) {
+      const prevBook = state.books[currentIdx - 1];
+      state.currentBook = prevBook;
+      state.currentChapter = prevBook.chapter_count;
+      await loadCurrentChapter();
+    }
   }
+}
 
+async function goToNextChapter() {
+  if (!state.currentBook) return;
   if (state.currentChapter < state.currentBook.chapter_count) {
-    btnNext.style.visibility = "visible";
-    btnNext.innerText = `Capítulo ${state.currentChapter + 1} →`;
+    state.currentChapter++;
+    await loadCurrentChapter();
   } else {
-    btnNext.style.visibility = "hidden";
+    const currentIdx = state.books.findIndex((b) => b.id === state.currentBook.id);
+    if (currentIdx < state.books.length - 1) {
+      const nextBook = state.books[currentIdx + 1];
+      state.currentBook = nextBook;
+      state.currentChapter = 1;
+      await loadCurrentChapter();
+    }
+  }
+}
+
+// ==========================================
+// FLOATING ACTION DOCK (SELEÇÃO DE VERSÍCULO YOUVERSION)
+// ==========================================
+function selectVerse(verse, spanEl) {
+  const dock = document.getElementById("verse-action-dock");
+  
+  // Se clicou no mesmo versículo com o dock já visível, desmarca
+  if (state.activeVerseForModal && state.activeVerseForModal.number === verse.number && dock.classList.contains("visible")) {
+    closeVerseDock();
+    return;
   }
 
-  const viewsContainer = document.getElementById("views-container");
-  viewsContainer.scrollTop = 0;
+  // Remove marcação anterior
+  document.querySelectorAll(".verse-item.selected-verse").forEach((el) => el.classList.remove("selected-verse"));
+  spanEl.classList.add("selected-verse");
+
+  state.activeVerseForModal = verse;
+
+  // Atualiza dock
+  const refText = `${state.currentBook.name} ${state.currentChapter}:${verse.number}`;
+  document.getElementById("dock-verse-ref").innerText = refText;
+
+  const currentHl = state.chapterHighlights[verse.number];
+  document.querySelectorAll(".color-dot-btn[data-color]").forEach((btn) => {
+    btn.classList.toggle("selected", btn.dataset.color === currentHl);
+  });
+
+  const btnRemove = document.getElementById("dock-btn-remove-hl");
+  if (btnRemove) {
+    btnRemove.style.display = currentHl ? "flex" : "none";
+  }
+
+  dock.classList.add("visible");
+}
+
+function closeVerseDock() {
+  const dock = document.getElementById("verse-action-dock");
+  if (dock) dock.classList.remove("visible");
+  document.querySelectorAll(".verse-item.selected-verse").forEach((el) => el.classList.remove("selected-verse"));
+  state.activeVerseForModal = null;
+}
+window.closeVerseDock = closeVerseDock;
+
+function setupDockActions() {
+  // Cores do dock
+  document.querySelectorAll(".color-dot-btn[data-color]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      setHighlight(btn.dataset.color);
+    });
+  });
+
+  // Remover destaque
+  const btnRemove = document.getElementById("dock-btn-remove-hl");
+  if (btnRemove) {
+    btnRemove.addEventListener("click", removeHighlight);
+  }
+
+  // Copiar versículo
+  const btnCopy = document.getElementById("dock-btn-copy");
+  if (btnCopy) {
+    btnCopy.addEventListener("click", () => {
+      if (state.activeVerseForModal) {
+        const text = `"${state.activeVerseForModal.text}" (${state.currentBook.name} ${state.currentChapter}:${state.activeVerseForModal.number} ACF)`;
+        navigator.clipboard.writeText(text);
+        
+        const originalHtml = btnCopy.innerHTML;
+        btnCopy.innerHTML = "<span>✓</span> <span>Copiado!</span>";
+        setTimeout(() => {
+          btnCopy.innerHTML = originalHtml;
+          closeVerseDock();
+        }, 1200);
+      }
+    });
+  }
+
+  // Orar com o versículo
+  const btnPrayer = document.getElementById("dock-btn-prayer");
+  if (btnPrayer) {
+    btnPrayer.addEventListener("click", () => {
+      if (state.activeVerseForModal) {
+        document.getElementById("prayer-title-input").value = `Oração sobre ${state.currentBook.name} ${state.currentChapter}:${state.activeVerseForModal.number}`;
+        document.getElementById("prayer-desc-input").value = `"${state.activeVerseForModal.text}"\n\nSenhor, ajuda-me a meditar e guardar esta Tua Palavra no meu coração...`;
+        closeVerseDock();
+        openModal("modal-new-prayer");
+      }
+    });
+  }
+
+  // Fechar dock
+  const btnClose = document.getElementById("dock-btn-close");
+  if (btnClose) {
+    btnClose.addEventListener("click", closeVerseDock);
+  }
+}
+
+// ==========================================
+// ATALHOS DO TECLADO NO PC DESKTOP (YOUVERSION WEB)
+// ==========================================
+function setupKeyboardShortcuts() {
+  window.addEventListener("keydown", (e) => {
+    if (state.currentTab !== "bible") return;
+    if (["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) return;
+    if (document.querySelector(".modal-overlay.active")) return;
+
+    if (e.key === "ArrowLeft") {
+      goToPreviousChapter();
+    } else if (e.key === "ArrowRight") {
+      goToNextChapter();
+    } else if (e.key === "Escape") {
+      closeVerseDock();
+    }
+  });
 }
 
 // ==========================================
@@ -365,7 +549,7 @@ async function checkAutoCompletion() {
     await toggleChapterProgress(true);
 
     const toast = document.getElementById("reading-completion-toast");
-    toast.classList.add("visible");
+    if (toast) toast.classList.add("visible");
   }
 }
 
@@ -391,13 +575,20 @@ function updateCompletionCheckmark() {
   const key = `${state.currentBook.id}_${state.currentChapter}`;
   const isDone = state.completedChapters.has(key);
   const btn = document.getElementById("btn-toggle-complete");
+  if (!btn) return;
+
+  const label = btn.querySelector(".desktop-btn-label");
+  const icon = btn.querySelector(".btn-check-icon");
+
   if (isDone) {
     btn.classList.add("completed");
-    btn.innerHTML = "✓";
-    btn.title = "Capítulo Concluído";
+    if (icon) icon.innerText = "✓";
+    if (label) label.innerText = "Concluído";
+    btn.title = "Capítulo Concluído (Clique para desmarcar)";
   } else {
     btn.classList.remove("completed");
-    btn.innerHTML = "○";
+    if (icon) icon.innerText = "○";
+    if (label) label.innerText = "Lido";
     btn.title = "Marcar como Concluído";
   }
 }
@@ -443,41 +634,28 @@ async function toggleChapterProgress(forceCompleted = false) {
 }
 
 // ==========================================
-// DESTAQUES DE TEXTO (5 CORES)
+// DESTAQUES DE TEXTO (5 CORES YOUVERSION)
 // ==========================================
 async function loadChapterHighlights() {
   if (state.isStaticMode) {
     const key = `scriptura_hl_${state.userId}_${state.currentBook.id}_${state.currentChapter}`;
-    const saved = localStorage.getItem(key);
-    state.chapterHighlights = saved ? JSON.parse(saved) : {};
+    const raw = localStorage.getItem(key);
+    state.chapterHighlights = raw ? JSON.parse(raw) : {};
   } else {
     try {
       const res = await fetch(
         `/api/highlights?user_id=${state.userId}&book_id=${state.currentBook.id}&chapter=${state.currentChapter}`
       );
-      state.chapterHighlights = await res.json();
+      const data = await res.json();
+      const map = {};
+      data.forEach((h) => {
+        map[h.verse] = h.color;
+      });
+      state.chapterHighlights = map;
     } catch (e) {
       state.chapterHighlights = {};
     }
   }
-}
-
-function openHighlightModal(verse) {
-  state.activeVerseForModal = verse;
-  const currentHl = state.chapterHighlights[verse.number];
-
-  document.getElementById("modal-hl-ref").innerText =
-    `${state.currentBook.name} ${state.currentChapter}:${verse.number}`;
-  document.getElementById("modal-hl-text").innerText = `"${verse.text}"`;
-
-  document.querySelectorAll(".color-circle-btn").forEach((btn) => {
-    btn.classList.toggle("selected", btn.dataset.color === currentHl);
-  });
-
-  const btnRemove = document.getElementById("btn-modal-remove-hl");
-  btnRemove.style.display = currentHl ? "block" : "none";
-
-  openModal("modal-highlight");
 }
 
 async function setHighlight(color) {
@@ -489,7 +667,7 @@ async function setHighlight(color) {
     const key = `scriptura_hl_${state.userId}_${state.currentBook.id}_${state.currentChapter}`;
     localStorage.setItem(key, JSON.stringify(state.chapterHighlights));
 
-    // Salva no registro geral de destaques
+    // Salva no histórico de destaques
     let allHl = JSON.parse(localStorage.getItem("scriptura_all_hl_" + state.userId) || "[]");
     allHl = allHl.filter(
       (h) => !(h.book_id === state.currentBook.id && h.chapter === state.currentChapter && h.verse === verseNum)
@@ -519,8 +697,12 @@ async function setHighlight(color) {
     state.chapterHighlights[verseNum] = color;
   }
 
-  renderVerses();
-  closeModal("modal-highlight");
+  // Atualiza a interface
+  const verseEl = document.querySelector(`.verse-item[data-verse="${verseNum}"]`);
+  if (verseEl) {
+    verseEl.className = `verse-item hl-${color}`;
+  }
+  closeVerseDock();
 }
 
 async function removeHighlight() {
@@ -551,46 +733,50 @@ async function removeHighlight() {
     delete state.chapterHighlights[verseNum];
   }
 
-  renderVerses();
-  closeModal("modal-highlight");
+  const verseEl = document.querySelector(`.verse-item[data-verse="${verseNum}"]`);
+  if (verseEl) {
+    verseEl.className = "verse-item";
+  }
+  closeVerseDock();
 }
 
 // ==========================================
-// DEVOCIONAIS (MONERGISMO)
+// DEVOCIONAIS REFORMADOS (MONERGISMO)
 // ==========================================
 async function loadDevotionals() {
-  const container = document.getElementById("devotionals-feed");
   if (state.isStaticMode) {
     state.devotionals = STATIC_DEVOTIONALS;
-    renderDevotionals();
   } else {
     try {
       const res = await fetch("/api/devotionals");
       state.devotionals = await res.json();
-      renderDevotionals();
     } catch (e) {
       state.devotionals = STATIC_DEVOTIONALS;
-      renderDevotionals();
     }
   }
+  renderDevotionals();
 }
 
 function renderDevotionals() {
   const container = document.getElementById("devotionals-feed");
+  if (!container) return;
   container.innerHTML = "";
 
   state.devotionals.forEach((dev) => {
     const card = document.createElement("div");
-    card.className = "card";
+    card.className = "yv-card";
+    const dateFormatted = new Date(dev.date).toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    });
+
     card.innerHTML = `
-      <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-        <span style="font-size:12px; font-weight:600; color:var(--primary);">${dev.date}</span>
-        <span style="font-size:12px; color:var(--text-muted); font-style:italic;">${dev.source_author || "Autor Reformado"}</span>
-      </div>
+      <div class="card-date">${dateFormatted} • ${dev.source_author}</div>
       <div class="card-title">${dev.title}</div>
       <div class="passage-badge">📖 ${dev.bible_reference} (ACF)</div>
-      <p style="font-size:14px; color:var(--text); line-height:1.6; white-space:pre-line; margin-bottom:16px;">${dev.content}</p>
-      <button class="btn-nav primary" style="font-size:13px; padding:6px 14px;" onclick="goToPassage('${dev.bible_reference}')">
+      <p style="font-size:15px; color:var(--text); line-height:1.7; white-space:pre-line; margin-bottom:20px;">${dev.content}</p>
+      <button class="btn-nav primary" style="font-size:13px; padding:8px 18px;" onclick="goToPassage('${dev.bible_reference}')">
         Ler Passagem na Bíblia →
       </button>
     `;
@@ -647,10 +833,13 @@ function renderPrayers() {
   const activeCount = state.prayers.filter((p) => p.status === "ativo").length;
   const answeredCount = state.prayers.filter((p) => p.status === "respondido").length;
 
-  document.getElementById("count-active-prayers").innerText = activeCount;
-  document.getElementById("count-answered-prayers").innerText = answeredCount;
+  const countActive = document.getElementById("count-active-prayers");
+  const countAnswered = document.getElementById("count-answered-prayers");
+  if (countActive) countActive.innerText = activeCount;
+  if (countAnswered) countAnswered.innerText = answeredCount;
 
   const container = document.getElementById("prayers-list");
+  if (!container) return;
   container.innerHTML = "";
 
   const filtered = state.prayers.filter((p) =>
@@ -659,11 +848,11 @@ function renderPrayers() {
 
   if (filtered.length === 0) {
     container.innerHTML = `
-      <div style="text-align:center; padding:40px; color:var(--text-muted);">
-        <p style="font-size:16px; font-weight:bold; margin-bottom:8px;">
+      <div style="text-align:center; padding:48px; color:var(--text-muted); grid-column: 1 / -1;">
+        <p style="font-size:18px; font-weight:700; margin-bottom:10px;">
           ${state.prayerTab === "active" ? "Nenhuma oração ativa." : "Nenhuma oração respondida ainda."}
         </p>
-        <p style="font-size:13px;">"Em tudo dai graças, porque esta é a vontade de Deus em Cristo Jesus para convosco." (1 Ts 5:18)</p>
+        <p style="font-size:14px; max-width:440px; margin:0 auto;">"Não estejais inquietos por coisa alguma; antes as vossas petições sejam em tudo conhecidas diante de Deus pela oração e súplica, com ação de graças." (Filipenses 4:6)</p>
       </div>
     `;
     return;
@@ -675,239 +864,215 @@ function renderPrayers() {
     const dateStr = new Date(p.created_at).toLocaleDateString("pt-BR");
     card.innerHTML = `
       <div class="prayer-header">
-        <div style="font-weight:bold; font-size:16px;">${p.title}</div>
+        <div style="font-weight:700; font-size:16px;">${p.title}</div>
         <button class="icon-btn" style="font-size:14px; width:28px; height:28px;" onclick="deletePrayer(${p.id})">✕</button>
       </div>
-      ${p.description ? `<p style="font-size:14px; color:var(--text-muted); margin-bottom:12px; line-height:1.5;">${p.description}</p>` : ""}
-      <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--text-muted);">
-        <span>Criada em: ${dateStr}</span>
-        ${
-          p.status === "ativo"
-            ? `<button class="btn-nav" style="padding:4px 10px; font-size:12px; background:#d1fae5; color:#065f46; border:none;" onclick="markAnswered(${p.id})">Respondida! ✓</button>`
-            : `<button class="btn-nav" style="padding:4px 10px; font-size:12px;" onclick="reopenPrayer(${p.id})">Reativar</button>`
-        }
+      <div style="font-size:11px; color:var(--text-muted); margin-bottom:10px;">${dateStr}</div>
+      ${p.description ? `<p style="font-size:14px; color:var(--text); line-height:1.6; margin-bottom:14px;">${p.description}</p>` : ""}
+      <div style="display:flex; justify-content:flex-end;">
+        <button class="btn-nav" style="font-size:12px; padding:6px 14px;" onclick="togglePrayerStatus(${p.id}, '${p.status}')">
+          ${p.status === "ativo" ? "✓ Marcar como Respondida" : "↩ Reativar Oração"}
+        </button>
       </div>
     `;
     container.appendChild(card);
   });
 }
 
-window.markAnswered = async function (id) {
+window.togglePrayerStatus = async function (id, currentStatus) {
+  const newStatus = currentStatus === "ativo" ? "respondido" : "ativo";
   if (state.isStaticMode) {
-    state.prayers = state.prayers.map((p) =>
-      p.id === id ? { ...p, status: "respondido", answered_at: new Date().toISOString() } : p
-    );
+    const p = state.prayers.find((x) => x.id === id);
+    if (p) p.status = newStatus;
     localStorage.setItem("scriptura_prayers_" + state.userId, JSON.stringify(state.prayers));
   } else {
-    await fetch("/api/prayers/answer", {
-      method: "POST",
+    await fetch(`/api/prayers/${id}/status`, {
+      method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
-    });
-  }
-  await loadPrayers();
-};
-
-window.reopenPrayer = async function (id) {
-  if (state.isStaticMode) {
-    state.prayers = state.prayers.map((p) =>
-      p.id === id ? { ...p, status: "ativo", answered_at: null } : p
-    );
-    localStorage.setItem("scriptura_prayers_" + state.userId, JSON.stringify(state.prayers));
-  } else {
-    await fetch("/api/prayers/reopen", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
+      body: JSON.stringify({ status: newStatus }),
     });
   }
   await loadPrayers();
 };
 
 window.deletePrayer = async function (id) {
-  if (confirm("Deseja realmente excluir este pedido de oração?")) {
-    if (state.isStaticMode) {
-      state.prayers = state.prayers.filter((p) => p.id !== id);
-      localStorage.setItem("scriptura_prayers_" + state.userId, JSON.stringify(state.prayers));
-    } else {
-      await fetch("/api/prayers/delete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
-      });
-    }
-    await loadPrayers();
+  if (!confirm("Deseja realmente excluir este pedido de oração?")) return;
+
+  if (state.isStaticMode) {
+    state.prayers = state.prayers.filter((x) => x.id !== id);
+    localStorage.setItem("scriptura_prayers_" + state.userId, JSON.stringify(state.prayers));
+  } else {
+    await fetch(`/api/prayers/${id}`, { method: "DELETE" });
   }
+  await loadPrayers();
+};
+
+window.openNewPrayerModal = function () {
+  document.getElementById("prayer-title-input").value = "";
+  document.getElementById("prayer-desc-input").value = "";
+  openModal("modal-new-prayer");
 };
 
 // ==========================================
-// PROGRESSO & DESTAQUES VIEW
+// TELA DE PROGRESSO E DESTAQUES
 // ==========================================
 async function loadProgressView() {
-  document.getElementById("user-profile-name").innerText = state.userName;
-  document.getElementById("user-profile-id").innerText = state.userId.substring(0, 14) + "...";
+  await loadUserProgress();
+  await loadAllHighlights();
+  renderProgressStats();
+  renderAllHighlights();
+}
 
-  const totalCompleted = state.completedChapters.size;
-  let otCompleted = 0;
-  let ntCompleted = 0;
+function renderProgressStats() {
+  const total = 1189;
+  const otTotal = 929;
+  const ntTotal = 260;
 
-  state.completedChapters.forEach((k) => {
-    const bId = parseInt(k.split("_")[0], 10);
-    if (bId <= 39) otCompleted++;
-    else ntCompleted++;
+  let totalDone = state.completedChapters.size;
+  let otDone = 0;
+  let ntDone = 0;
+
+  state.completedChapters.forEach((key) => {
+    const bId = parseInt(key.split("_")[0], 10);
+    if (bId <= 39) otDone++;
+    else ntDone++;
   });
 
-  const biblePct = ((totalCompleted / 1189) * 100).toFixed(1);
-  const otPct = ((otCompleted / 929) * 100).toFixed(1);
-  const ntPct = ((ntCompleted / 260) * 100).toFixed(1);
+  const biblePct = Math.round((totalDone / total) * 100);
+  const otPct = Math.round((otDone / otTotal) * 100);
+  const ntPct = Math.round((ntDone / ntTotal) * 100);
 
-  document.getElementById("prog-bible-pct").innerText = biblePct + "%";
-  document.getElementById("prog-bible-text").innerText = `${totalCompleted} de 1.189 capítulos`;
-  document.getElementById("prog-bible-bar").style.width = biblePct + "%";
+  document.getElementById("prog-bible-pct").innerText = `${biblePct}%`;
+  document.getElementById("prog-bible-bar").style.width = `${biblePct}%`;
+  document.getElementById("prog-bible-text").innerText = `${totalDone} de ${total} capítulos lidos`;
 
-  document.getElementById("prog-ot-pct").innerText = otPct + "%";
-  document.getElementById("prog-ot-text").innerText = `${otCompleted} de 929 capítulos`;
-  document.getElementById("prog-ot-bar").style.width = otPct + "%";
+  document.getElementById("prog-ot-pct").innerText = `${otPct}%`;
+  document.getElementById("prog-ot-bar").style.width = `${otPct}%`;
+  document.getElementById("prog-ot-text").innerText = `${otDone} de ${otTotal} capítulos`;
 
-  document.getElementById("prog-nt-pct").innerText = ntPct + "%";
-  document.getElementById("prog-nt-text").innerText = `${ntCompleted} de 260 capítulos`;
-  document.getElementById("prog-nt-bar").style.width = ntPct + "%";
+  document.getElementById("prog-nt-pct").innerText = `${ntPct}%`;
+  document.getElementById("prog-nt-bar").style.width = `${ntPct}%`;
+  document.getElementById("prog-nt-text").innerText = `${ntDone} de ${ntTotal} capítulos`;
+}
 
+async function loadAllHighlights() {
   if (state.isStaticMode) {
     const saved = localStorage.getItem("scriptura_all_hl_" + state.userId);
     state.allHighlights = saved ? JSON.parse(saved) : [];
   } else {
     try {
-      const res = await fetch(`/api/highlights?user_id=${state.userId}`);
+      const res = await fetch(`/api/highlights/all?user_id=${state.userId}`);
       state.allHighlights = await res.json();
     } catch (e) {
-      const saved = localStorage.getItem("scriptura_all_hl_" + state.userId);
-      state.allHighlights = saved ? JSON.parse(saved) : [];
+      state.allHighlights = [];
     }
   }
-  renderAllHighlights();
 }
 
 function renderAllHighlights() {
   const container = document.getElementById("all-highlights-list");
+  if (!container) return;
   container.innerHTML = "";
 
-  const filtered = state.selectedColorFilter
-    ? state.allHighlights.filter((h) => h.color === state.selectedColorFilter)
-    : state.allHighlights;
-
-  if (filtered.length === 0) {
-    container.innerHTML =
-      '<div style="text-align:center; padding:20px; color:var(--text-muted);">Nenhum versículo destacado encontrado.</div>';
+  if (state.allHighlights.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center; padding:36px; color:var(--text-muted); grid-column: 1 / -1;">
+        <p style="font-size:15px; font-weight:700;">Nenhum versículo destacado ainda.</p>
+        <p style="font-size:13px; margin-top:4px;">Toque ou clique em qualquer versículo durante a leitura para marcá-lo com uma das 5 cores oficiais YouVersion.</p>
+      </div>
+    `;
     return;
   }
 
-  filtered.forEach((h) => {
-    const div = document.createElement("div");
-    div.className = "card";
-    div.style.padding = "12px 16px";
-    div.style.marginBottom = "8px";
-    div.style.cursor = "pointer";
-    div.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-        <span style="font-weight:bold; font-size:15px; color:var(--primary);">${h.book_name} ${h.chapter}:${h.verse}</span>
-        <span style="display:inline-block; width:12px; height:12px; border-radius:50%; background-color:var(--hl-${h.color}); border:1px solid var(--border);"></span>
+  state.allHighlights.forEach((h) => {
+    const card = document.createElement("div");
+    card.className = "yv-card";
+    card.style.borderLeft = `5px solid var(--hl-${h.color})`;
+    card.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <span style="font-weight:700; font-size:15px;">${h.book_name} ${h.chapter}:${h.verse}</span>
+        <span style="width:12px; height:12px; border-radius:50%; background-color:var(--hl-${h.color});"></span>
       </div>
-      <p style="font-size:14px; font-style:italic; color:var(--text); line-height:1.4;">"${h.verse_text || ""}"</p>
+      <p style="font-style:italic; font-size:14px; line-height:1.6; color:var(--text); margin-bottom:12px;">"${h.verse_text}"</p>
+      <button class="btn-nav" style="font-size:12px; padding:6px 14px;" onclick="goToVerse(${h.book_id}, ${h.chapter}, ${h.verse})">
+        Ir para Passagem →
+      </button>
     `;
-    div.addEventListener("click", () => {
-      const b = state.books.find((bk) => bk.id === h.book_id);
-      if (b) {
-        state.currentBook = b;
-        state.currentChapter = h.chapter;
-        switchTab("bible");
-        loadCurrentChapter();
-      }
-    });
-    container.appendChild(div);
+    container.appendChild(card);
   });
 }
 
+window.goToVerse = async function (bookId, chapter, verse) {
+  const b = state.books.find((bk) => bk.id === bookId);
+  if (b) {
+    state.currentBook = b;
+    state.currentChapter = chapter;
+    switchTab("bible");
+    await loadCurrentChapter();
+    setTimeout(() => {
+      const el = document.querySelector(`.verse-item[data-verse="${verse}"]`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        selectVerse({ number: verse, text: el.innerText }, el);
+      }
+    }, 200);
+  }
+};
+
 // ==========================================
-// MODAIS & SELETOR DE LIVROS
+// CONFIGURAÇÃO DOS MODAIS & EVENTOS
 // ==========================================
 function setupModals() {
-  document.getElementById("header-title-btn").addEventListener("click", () => {
-    if (state.currentTab === "bible") {
-      openBookPicker();
-    }
-  });
+  // Botão do Seletor de Livro
+  document.getElementById("header-title-btn").addEventListener("click", openBookPicker);
 
+  // Botão de Ajustes de Leitura
   document.getElementById("btn-settings").addEventListener("click", () => {
     openModal("modal-settings");
   });
 
+  // Botão Marcar como Lido no Topo
   document.getElementById("btn-toggle-complete").addEventListener("click", () => {
     toggleChapterProgress(false);
   });
 
-  document.getElementById("btn-prev-chap").addEventListener("click", () => {
-    if (state.currentChapter > 1) {
-      state.currentChapter--;
-      loadCurrentChapter();
-    }
-  });
-  document.getElementById("btn-next-chap").addEventListener("click", () => {
-    if (state.currentChapter < state.currentBook.chapter_count) {
-      state.currentChapter++;
-      loadCurrentChapter();
-    }
-  });
+  // Setas Desktop (< e >)
+  const prevDesktop = document.getElementById("desktop-prev-chap");
+  if (prevDesktop) prevDesktop.addEventListener("click", goToPreviousChapter);
 
+  const nextDesktop = document.getElementById("desktop-next-chap");
+  if (nextDesktop) nextDesktop.addEventListener("click", goToNextChapter);
+
+  // Botões de Rodapé
+  document.getElementById("btn-prev-chap").addEventListener("click", goToPreviousChapter);
+  document.getElementById("btn-next-chap").addEventListener("click", goToNextChapter);
+
+  // Ajustes de Tema
   document.querySelectorAll(".theme-opt-btn").forEach((btn) => {
     btn.addEventListener("click", () => applyTheme(btn.dataset.theme));
   });
 
+  // Slider de Tamanho da Fonte
   const fontSlider = document.getElementById("font-size-slider");
   fontSlider.value = state.fontSize;
   fontSlider.addEventListener("input", (e) => applyFontSize(parseInt(e.target.value, 10)));
 
+  // Tipo de Fonte
   document.getElementById("btn-font-serif").addEventListener("click", () => applyFontFamily(true));
   document.getElementById("btn-font-sans").addEventListener("click", () => applyFontFamily(false));
 
-  document.querySelectorAll(".color-circle-btn").forEach((btn) => {
-    btn.addEventListener("click", () => setHighlight(btn.dataset.color));
-  });
-
-  document.getElementById("btn-modal-remove-hl").addEventListener("click", removeHighlight);
-
-  document.getElementById("btn-modal-copy-verse").addEventListener("click", () => {
-    if (state.activeVerseForModal) {
-      const text = `"${state.activeVerseForModal.text}" (${state.currentBook.name} ${state.currentChapter}:${state.activeVerseForModal.number} ACF)`;
-      navigator.clipboard.writeText(text);
-      alert("Versículo copiado!");
-      closeModal("modal-highlight");
-    }
-  });
-
-  const btnPrayerVerse = document.getElementById("btn-modal-prayer-verse");
-  if (btnPrayerVerse) {
-    btnPrayerVerse.addEventListener("click", () => {
-      if (state.activeVerseForModal) {
-        document.getElementById("prayer-title-input").value = `Oração sobre ${state.currentBook.name} ${state.currentChapter}:${state.activeVerseForModal.number}`;
-        document.getElementById("prayer-desc-input").value = `"${state.activeVerseForModal.text}"\n\nSenhor, ajuda-me a viver esta verdade...`;
-        closeModal("modal-highlight");
-        openModal("modal-new-prayer");
-      }
-    });
+  // Botão FAB Nova Oração
+  const btnFab = document.getElementById("btn-new-prayer-fab");
+  if (btnFab) {
+    btnFab.addEventListener("click", openNewPrayerModal);
   }
 
-  document.getElementById("btn-new-prayer-fab").addEventListener("click", () => {
-    document.getElementById("prayer-title-input").value = "";
-    document.getElementById("prayer-desc-input").value = "";
-    openModal("modal-new-prayer");
-  });
-
+  // Salvar Oração
   document.getElementById("btn-save-prayer").addEventListener("click", async () => {
     const title = document.getElementById("prayer-title-input").value.trim();
     const desc = document.getElementById("prayer-desc-input").value.trim();
     if (!title) {
-      alert("Por favor, preencha o título do pedido.");
+      alert("Por favor, preencha o título do pedido de oração.");
       return;
     }
 
@@ -938,12 +1103,14 @@ function setupModals() {
     await loadPrayers();
   });
 
+  // Abas de Oração (Ativas / Respondidas)
   document.getElementById("tab-active-prayers").addEventListener("click", () => {
     state.prayerTab = "active";
     document.getElementById("tab-active-prayers").classList.add("active");
     document.getElementById("tab-answered-prayers").classList.remove("active");
     renderPrayers();
   });
+
   document.getElementById("tab-answered-prayers").addEventListener("click", () => {
     state.prayerTab = "answered";
     document.getElementById("tab-answered-prayers").classList.add("active");
@@ -951,6 +1118,7 @@ function setupModals() {
     renderPrayers();
   });
 
+  // Fechar modais ao clicar no fundo
   document.querySelectorAll(".modal-overlay").forEach((modal) => {
     modal.addEventListener("click", (e) => {
       if (e.target === modal) {
@@ -959,26 +1127,70 @@ function setupModals() {
     });
   });
 
-  document.getElementById("btn-edit-name").addEventListener("click", () => {
-    const newName = prompt("Digite seu nome de leitor:", state.userName);
-    if (newName && newName.trim()) {
-      state.userName = newName.trim();
-      localStorage.setItem("scriptura_user_name", state.userName);
-      document.getElementById("user-profile-name").innerText = state.userName;
-    }
-  });
+  // Editar Nome de Leitor
+  const btnEditName = document.getElementById("btn-edit-name");
+  if (btnEditName) {
+    btnEditName.addEventListener("click", () => {
+      const newName = prompt("Digite seu nome de leitor:", state.userName);
+      if (newName && newName.trim()) {
+        state.userName = newName.trim();
+        localStorage.setItem("scriptura_user_name", state.userName);
+        document.getElementById("user-profile-name").innerText = state.userName;
+      }
+    });
+  }
+
+  // Filtro de busca de livros em tempo real
+  const searchInput = document.getElementById("book-search-input");
+  if (searchInput) {
+    searchInput.addEventListener("input", (e) => {
+      const term = e.target.value.toLowerCase().trim();
+      renderBookPickerBooks(currentTestamentTab, term);
+    });
+  }
 }
 
+// ==========================================
+// SELETOR DE LIVROS & CAPÍTULOS
+// ==========================================
 function openBookPicker() {
-  renderBookPickerBooks("at");
+  const searchInput = document.getElementById("book-search-input");
+  if (searchInput) searchInput.value = "";
+  const backBtn = document.getElementById("btn-back-to-books");
+  if (backBtn) backBtn.style.display = "none";
+  const tabs = document.getElementById("picker-testament-tabs");
+  if (tabs) tabs.style.display = "flex";
+  const searchWrap = document.getElementById("picker-search-container");
+  if (searchWrap) searchWrap.style.display = "block";
+
+  renderBookPickerBooks(currentTestamentTab);
   openModal("modal-book-picker");
 }
 
-function renderBookPickerBooks(testament) {
+function renderBookPickerBooks(testament, filterTerm = "") {
+  currentTestamentTab = testament;
+  document.getElementById("book-picker-title").innerText = "Selecionar Livro";
+  const backBtn = document.getElementById("btn-back-to-books");
+  if (backBtn) backBtn.style.display = "none";
+  const tabs = document.getElementById("picker-testament-tabs");
+  if (tabs) tabs.style.display = "flex";
+
   const container = document.getElementById("book-picker-list");
   container.innerHTML = "";
 
-  const booksToDisplay = state.books.filter((b) => b.testament === testament);
+  let booksToDisplay = state.books.filter((b) => b.testament === testament);
+  if (filterTerm) {
+    booksToDisplay = state.books.filter(
+      (b) =>
+        b.name.toLowerCase().includes(filterTerm) ||
+        b.abbreviation.toLowerCase().includes(filterTerm)
+    );
+  }
+
+  if (booksToDisplay.length === 0) {
+    container.innerHTML = `<div style="text-align:center; padding:32px; color:var(--text-muted);">Nenhum livro encontrado para "${filterTerm}".</div>`;
+    return;
+  }
 
   booksToDisplay.forEach((b) => {
     let completedCount = 0;
@@ -987,20 +1199,28 @@ function renderBookPickerBooks(testament) {
     }
 
     const item = document.createElement("div");
-    item.style.padding = "12px 16px";
+    item.style.padding = "14px 16px";
     item.style.borderBottom = "1px solid var(--border)";
     item.style.display = "flex";
     item.style.justifyContent = "space-between";
     item.style.alignItems = "center";
     item.style.cursor = "pointer";
+    item.style.transition = "background-color 0.15s";
+
+    item.onmouseenter = () => (item.style.backgroundColor = "var(--surface-hover)");
+    item.onmouseleave = () => (item.style.backgroundColor = "transparent");
 
     item.innerHTML = `
       <div>
-        <div style="font-weight:600; font-size:16px;">${b.name}</div>
+        <div style="font-weight:700; font-size:16px;">${b.name}</div>
         <div style="font-size:12px; color:var(--text-muted);">${b.chapter_count} capítulos</div>
       </div>
       <div style="display:flex; align-items:center; gap:8px;">
-        ${completedCount > 0 ? `<span style="background:rgba(16,185,129,0.15); color:#047857; font-size:12px; font-weight:bold; padding:2px 8px; border-radius:10px;">${completedCount}/${b.chapter_count} ✓</span>` : ""}
+        ${
+          completedCount > 0
+            ? `<span style="background:rgba(16,185,129,0.15); color:#047857; font-size:12px; font-weight:bold; padding:2px 8px; border-radius:10px;">${completedCount}/${b.chapter_count} ✓</span>`
+            : ""
+        }
         <span style="color:var(--text-muted); font-size:18px;">›</span>
       </div>
     `;
@@ -1013,31 +1233,38 @@ function renderBookPickerBooks(testament) {
 window.selectTestamentTab = function (testament) {
   document.getElementById("tab-ot-btn").classList.toggle("active", testament === "at");
   document.getElementById("tab-nt-btn").classList.toggle("active", testament === "nt");
-  document.getElementById("book-picker-title").innerText = "Selecionar Livro";
   renderBookPickerBooks(testament);
 };
 
 function renderChapterGrid(book) {
-  document.getElementById("book-picker-title").innerText = `${book.name} — Capítulos`;
+  document.getElementById("book-picker-title").innerText = `${book.name}`;
+  const backBtn = document.getElementById("btn-back-to-books");
+  if (backBtn) backBtn.style.display = "inline-flex";
+  const tabs = document.getElementById("picker-testament-tabs");
+  if (tabs) tabs.style.display = "none";
+  const searchWrap = document.getElementById("picker-search-container");
+  if (searchWrap) searchWrap.style.display = "none";
+
   const container = document.getElementById("book-picker-list");
   container.innerHTML = `
-    <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:10px; padding:16px 0;">
+    <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap:10px; padding:16px 0;">
       ${Array.from({ length: book.chapter_count }, (_, i) => i + 1)
         .map((chap) => {
           const isDone = state.completedChapters.has(`${book.id}_${chap}`);
           const isCurrent = state.currentBook.id === book.id && state.currentChapter === chap;
           return `
             <button onclick="pickChapter(${book.id}, ${chap})" style="
-              aspect-ratio: 1.1;
-              font-size: 16px;
-              font-weight: bold;
-              border-radius: 8px;
-              border: 1px solid ${isCurrent ? "var(--primary)" : isDone ? "#10b981" : "var(--border)"};
-              background: ${isCurrent ? "var(--primary)" : isDone ? "#d1fae5" : "var(--surface)"};
-              color: ${isCurrent ? "#ffffff" : isDone ? "#065f46" : "var(--text)"};
+              aspect-ratio: 1;
+              font-size: 15px;
+              font-weight: 800;
+              border-radius: 10px;
+              border: 1px solid ${isCurrent ? "var(--yv-red)" : isDone ? "#10b981" : "var(--border)"};
+              background: ${isCurrent ? "var(--yv-red)" : isDone ? "rgba(16,185,129,0.12)" : "var(--surface)"};
+              color: ${isCurrent ? "#ffffff" : isDone ? "#047857" : "var(--text)"};
               cursor: pointer;
+              transition: transform 0.1s;
             ">
-              ${chap} ${isDone && !isCurrent ? '<span style="font-size:10px;">✓</span>' : ""}
+              ${chap}
             </button>
           `;
         })
@@ -1045,6 +1272,12 @@ function renderChapterGrid(book) {
     </div>
   `;
 }
+
+window.backToBookList = function () {
+  const searchWrap = document.getElementById("picker-search-container");
+  if (searchWrap) searchWrap.style.display = "block";
+  renderBookPickerBooks(currentTestamentTab);
+};
 
 window.pickChapter = function (bookId, chapter) {
   const b = state.books.find((bk) => bk.id === bookId);
