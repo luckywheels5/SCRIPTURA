@@ -209,7 +209,7 @@ class HighlightSelectorSheet extends ConsumerWidget {
                 ],
                 Expanded(
                   child: TextButton.icon(
-                    icon: const Icon(Icons.favorite_border_rounded, size: 18),
+                    icon: const Icon(Icons.bookmark_border_rounded, size: 18),
                     label: const Text('Orar'),
                     onPressed: () {
                       Navigator.pop(context);

@@ -584,7 +584,7 @@ function renderDevotionals() {
     card.className = "card";
     card.innerHTML = `
       <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-        <span style="font-size:12px; font-weight:600; color:var(--primary-burgundy);">${dev.date}</span>
+        <span style="font-size:12px; font-weight:600; color:var(--primary);">${dev.date}</span>
         <span style="font-size:12px; color:var(--text-muted); font-style:italic;">${dev.source_author || "Autor Reformado"}</span>
       </div>
       <div class="card-title">${dev.title}</div>
@@ -810,7 +810,7 @@ function renderAllHighlights() {
     div.style.cursor = "pointer";
     div.innerHTML = `
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-        <span style="font-weight:bold; font-size:15px; color:var(--primary-burgundy);">${h.book_name} ${h.chapter}:${h.verse}</span>
+        <span style="font-weight:bold; font-size:15px; color:var(--primary);">${h.book_name} ${h.chapter}:${h.verse}</span>
         <span style="display:inline-block; width:12px; height:12px; border-radius:50%; background-color:var(--hl-${h.color}); border:1px solid var(--border);"></span>
       </div>
       <p style="font-size:14px; font-style:italic; color:var(--text); line-height:1.4;">"${h.verse_text || ""}"</p>
@@ -1020,8 +1020,8 @@ function renderChapterGrid(book) {
               font-size: 16px;
               font-weight: bold;
               border-radius: 8px;
-              border: 1px solid ${isCurrent ? "var(--primary-burgundy)" : isDone ? "#10b981" : "var(--border)"};
-              background: ${isCurrent ? "var(--primary-burgundy)" : isDone ? "#d1fae5" : "var(--surface)"};
+              border: 1px solid ${isCurrent ? "var(--primary)" : isDone ? "#10b981" : "var(--border)"};
+              background: ${isCurrent ? "var(--primary)" : isDone ? "#d1fae5" : "var(--surface)"};
               color: ${isCurrent ? "#ffffff" : isDone ? "#065f46" : "var(--text)"};
               cursor: pointer;
             ">

@@ -121,7 +121,7 @@ class _PrayersScreenState extends ConsumerState<PrayersScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                isAnsweredTab ? Icons.celebration_rounded : Icons.favorite_border_rounded,
+                isAnsweredTab ? Icons.check_circle_outline_rounded : Icons.bookmark_outline_rounded,
                 size: 56,
                 color: Colors.grey.withValues(alpha: 0.5),
               ),

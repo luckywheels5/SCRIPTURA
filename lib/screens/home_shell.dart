@@ -58,8 +58,8 @@ class _HomeShellState extends ConsumerState<HomeShell> {
           });
         },
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: AppColors.primaryBurgundy,
-        unselectedItemColor: Colors.grey,
+        selectedItemColor: AppColors.primarySlate,
+        unselectedItemColor: AppColors.lightTextSecondary,
         selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
         unselectedLabelStyle: const TextStyle(fontSize: 12),
         items: const [
@@ -74,8 +74,8 @@ class _HomeShellState extends ConsumerState<HomeShell> {
             label: 'Devocionais',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_border_rounded),
-            activeIcon: Icon(Icons.favorite_rounded),
+            icon: Icon(Icons.bookmark_border_rounded),
+            activeIcon: Icon(Icons.bookmark_rounded),
             label: 'Orações',
           ),
           BottomNavigationBarItem(
