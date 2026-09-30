@@ -1,6 +1,9 @@
 # Scriptura App (Versão ACF)
 
+> **Site Online no Domínio GitHub Pages:** [https://luckywheels5.github.io/SCRIPTURA/](https://luckywheels5.github.io/SCRIPTURA/)
+
 Aplicativo devocional e de leitura contínua das Sagradas Escrituras na tradução **Almeida Corrigida Fiel (ACF)**, com estética sóbria e teologia reformada clássica (Monergismo).
+
 
 ## Funcionalidades Implementadas
 
