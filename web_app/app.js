@@ -24,6 +24,11 @@ const state = {
   allHighlights: [],
   selectedColorFilter: null,
 
+  // Estante da Reforma
+  reformationFilter: "all",
+  reformationSearch: "",
+  activeReformationDoc: null,
+
   // Rastreamento automático de leitura
   readStartTime: Date.now(),
   reachedBottom: false,
@@ -32,6 +37,248 @@ const state = {
 };
 
 let currentTestamentTab = "at";
+
+// ==========================================
+// ACERVO DA ESTANTE DA REFORMA PROTESTANTE
+// Documentos históricos, 5 Solas, TULIP, Confissões & Tratados
+// ==========================================
+const REFORMATION_DATA = [
+  // --- 1. OS CINCO SOLAS DA REFORMA ---
+  {
+    id: "sola-scriptura",
+    category: "solas",
+    tag: "Os 5 Solas",
+    title: "Sola Scriptura (Somente a Escritura)",
+    author: "Martinho Lutero • Dieta de Worms, 1521",
+    bible_ref: "2 Timóteo 3:16-17",
+    bible_text: "Toda a Escritura é divinamente inspirada, e proveitosa para ensinar, para redargüir, para corrigir, para instruir em justiça; Para que o homem de Deus seja perfeito, e perfeitamente instruído para toda a boa obra.",
+    quote: "A menos que eu seja convencido pelo testemunho das Sagradas Escrituras ou por razão pura e manifesta... minha consciência está cativa à Palavra de Deus. Aqui permaneço, não posso fazer outra coisa. Que Deus me ajude. Amém!",
+    summary: "A Bíblia Sagrada é a única regra inerrante, suficiente, infalível e soberana de fé e prática para o cristão e para a Igreja.",
+    full_content: "Sola Scriptura (Somente a Escritura) é o princípio formal da Reforma Protestante. Este pilar afirma que a Bíblia é a autoridade máxima e final sobre todas as questões doutrinárias e morais.\n\nIsso não significa desprezar a história da igreja ou os mestres do passado, mas estabelece que todo concílio humano, papa, tradição eclesial ou sentimento individual devem submeter-se irrestritamente ao crivo da Palavra inspirada.\n\nA suficiência das Escrituras nos assegura que tudo o que é necessário para a glória de Deus, a salvação eterna do pecador e a vida de santidade foi plenamente registrado pelo Espírito Santo nos 66 livros canônicos. Como declara o Salmo 119:105: 'Lâmpada para os meus pés é tua palavra, e luz para o meu caminho.'"
+  },
+  {
+    id: "sola-fide",
+    category: "solas",
+    tag: "Os 5 Solas",
+    title: "Sola Fide (Somente a Fé)",
+    author: "Martinho Lutero & João Calvino • 1517",
+    bible_ref: "Romanos 3:28",
+    bible_text: "Concluímos, pois, que o homem é justificado pela fé sem as obras da lei.",
+    quote: "A justificação somente pela fé é o artigo com o qual a Igreja se mantém em pé ou cai. Sem este fundamento, a alma permanece escrava do desespero.",
+    summary: "O pecador culpado é justificado diante de Deus exclusivamente pela fé na justiça de Jesus Cristo que nos é imputada.",
+    full_content: "Sola Fide (Somente a Fé) é o princípio material da Reforma do Século XVI. A doutrina da Justificação ensina que Deus declara legalmente justo o pecador não com base em virtudes intrínsecas dele, nem por boas obras, penitências ou sacramentos, mas exclusivamente mediante a fé em Jesus Cristo.\n\nNa cruz ocorreu uma dupla imputação: todos os nossos pecados e dívidas de culpa foram imputados (creditados) a Cristo, e a justiça perfeita, obediência ativa e passiva do Salvador foram imputadas a nós.\n\nA fé salvífica não é uma obra meritória, mas a mão vazia do mendigo que recebe o presente indescritível da salvação. As boas obras não cooperam para a justificação, mas são os frutos necessários de um coração regenerado."
+  },
+  {
+    id: "sola-gratia",
+    category: "solas",
+    tag: "Os 5 Solas",
+    title: "Sola Gratia (Somente a Graça)",
+    author: "João Calvino & Teólogos Reformados • 1536",
+    bible_ref: "Efésios 2:8-9",
+    bible_text: "Porque pela graça sois salvos, por meio da fé; e isto não vem de vós, é dom de Deus. Não vem das obras, para que ninguém se glorie.",
+    quote: "Deus encontra em nós apenas o motivo para nos condenar, mas em Sua graça soberana e eterna encontra em Si mesmo o motivo para nos salvar.",
+    summary: "A salvação é inteiramente um dom imerecido e soberano de Deus, operada pelo Espírito Santo sem dependência de méritos humanos.",
+    full_content: "Sola Gratia (Somente a Graça) proclama que o ser humano, por estar morto em delitos e pecados (Efésios 2:1), é incapaz de dar o primeiro passo ou de cooperar para a sua própria regeneração moral.\n\nA salvação é monergista: Deus é quem toma a iniciativa absoluta, chamando das trevas para a Sua maravilhosa luz aqueles a quem escolheu. A graça divina não é uma simples ajuda para quem se esforça, mas um poder ressuscitador que dá nova vida aos espiritualmente mortos.\n\nToda jactância humana é destruída perante a cruz: 'Assim, pois, isto não depende do que quer, nem do que corre, mas de Deus, que se compadece' (Romanos 9:16)."
+  },
+  {
+    id: "solus-christus",
+    category: "solas",
+    tag: "Os 5 Solas",
+    title: "Solus Christus (Somente Cristo)",
+    author: "Ulrico Zuínglio • Zurique, 1523",
+    bible_ref: "1 Timóteo 2:5",
+    bible_text: "Porque há um só Deus, e um só Mediador entre Deus e os homens, Jesus Cristo homem.",
+    quote: "Cristo é a única rocha, a fonte inesgotável de toda graça. Buscar mediação em criaturas é escarnecer do sacrifício perfeito do Calvário.",
+    summary: "Jesus Cristo é o único Mediador entre o Santo Deus e a humanidade caída. Sua vida e morte vicária são plenamente suficientes.",
+    full_content: "Solus Christus (Somente Cristo) resgata o ensino apostólico de que a redenção foi consumada pelo Filho de Deus sem necessidade de mediadores terrenos, santos ou cerimoniais acrescentados.\n\nCristo exerce os três ofícios eternos: é o Profeta supremo que revela a verdade do Pai; o Sumo Sacerdote que ofereceu a Si mesmo em sacrifício de valor infinito de uma vez para sempre; e o Rei soberano que reina sobre o universo e governa o coração dos Seus remidos.\n\nComo ensina Atos 4:12: 'E em nenhum outro há salvação, porque também debaixo do céu nenhum outro nome há, dado entre os homens, pelo qual devamos ser salvos.'"
+  },
+  {
+    id: "soli-deo-gloria",
+    category: "solas",
+    tag: "Os 5 Solas",
+    title: "Soli Deo Gloria (Glória Somente a Deus)",
+    author: "João Calvino & Johann Sebastian Bach • 1536",
+    bible_ref: "Romanos 11:36",
+    bible_text: "Porque dele e por ele, e para ele, são todas as coisas; glória, pois, a ele eternamente. Amém.",
+    quote: "Não a nós, SENHOR, não a nós, mas ao teu nome dá glória, por amor da tua benignidade e da tua verdade. (Salmo 115:1)",
+    summary: "O propósito final de toda a criação, providência e redenção é única e exclusivamente manifestar a grandeza da glória de Deus.",
+    full_content: "Soli Deo Gloria (Glória Somente a Deus) é o coro e a coroa de todos os Solas. Se a salvação procede somente da Escritura, é recebida somente pela fé, concedida somente pela graça e realizada somente por Cristo, segue-se necessariamente que toda a glória pertence exclusivamente a Deus, e jamais ao homem.\n\nEste princípio redime a totalidade da existência humana: cada profissão lícita, o trabalho diário, os estudos, a família e a adoração pública tornam-se um altar de louvor ao Altíssimo.\n\n'Portanto, quer comais quer bebais, ou façais outra qualquer coisa, fazei tudo para glória de Deus' (1 Coríntios 10:31)."
+  },
+
+  // --- 2. DOUTRINAS DA GRAÇA (T.U.L.I.P. - CÂNONES DE DORT, 1619) ---
+  {
+    id: "tulip-total-depravity",
+    category: "tulip",
+    tag: "Doutrinas da Graça",
+    title: "T — Depravação Total (Total Depravity)",
+    author: "Sínodo de Dort • 1618-1619",
+    bible_ref: "Romanos 3:10-12",
+    bible_text: "Como está escrito: Não há um justo, nem um sequer. Não há ninguém que entenda; não há ninguém que busque a Deus. Todos se extraviaram, e juntamente se fizeram inúteis.",
+    quote: "A depravação total não significa que todo homem seja tão pecaminoso quanto poderia ser, mas que o veneno do pecado corrompeu cada dimensão de sua mente, coração e vontade.",
+    summary: "A queda no Éden afetou a totalidade do ser humano, tornando-o espiritualmente morto e incapaz de buscar ou agradar a Deus por si mesmo.",
+    full_content: "O primeiro ponto do acróstico TULIP estabelece o estado desesperador da criatura caída. Em decorrência do pecado original de Adão, todo homem nasce espiritualmente morto (Efésios 2:1) e cego para a beleza de Deus.\n\nA vontade humana é livre de coação externa, mas está inclinada e escravizada pela sua própria natureza pecaminosa. Jesus afirmou: 'Ninguém pode vir a mim, se o Pai que me enviou o não trouxer' (João 6:44). Sem o milagre soberano da regeneração operada pelo Espírito Santo, o homem natural jamais escolherá a Cristo."
+  },
+  {
+    id: "tulip-unconditional-election",
+    category: "tulip",
+    tag: "Doutrinas da Graça",
+    title: "U — Eleição Incondicional (Unconditional Election)",
+    author: "Sínodo de Dort • 1618-1619",
+    bible_ref: "Efésios 1:4-5",
+    bible_text: "Como também nos elegeu nele antes da fundação do mundo, para que fôssemos santos e irrepreensíveis diante dele em amor; E nos predestinou para filhos de adoção por Jesus Cristo, para si mesmo, segundo o beneplácito de sua vontade.",
+    quote: "Tenho certeza absoluta de que se Deus não tivesse me escolhido antes que eu nascesse, Ele jamais teria me escolhido depois! — Charles H. Spurgeon",
+    summary: "Deus escolheu soberanamente um povo para a salvação eterna antes da criação do mundo, não por méritos previstos, mas por Seu santo beneplácito.",
+    full_content: "A eleição incondicional ensina que a decisão de Deus de resgatar pecadores da perdição eterna foi tomada na eternidade passada, fundamentada unicamente no Seu amor infinito e conselho soberano.\n\nEla é incondicional porque não foi motivada por fé futura prevista, boas obras ou decisões autônomas do homem (Romanos 9:11-16). Pelo contrário: a própria fé salvífica e a santidade são os frutos gerados pela eleição divina.\n\nEsta doutrina não gera soberba, mas a mais profunda humildade e gratidão de joelhos dobrados diante do Trono da Graça."
+  },
+  {
+    id: "tulip-limited-atonement",
+    category: "tulip",
+    tag: "Doutrinas da Graça",
+    title: "L — Expiação Particular / Limitada (Particular Redemption)",
+    author: "Sínodo de Dort & John Owen • 1619",
+    bible_ref: "João 10:14-15",
+    bible_text: "Eu sou o bom Pastor, e conheço as minhas ovelhas, e das minhas sou conhecido... e dou a minha vida pelas ovelhas.",
+    quote: "Cristo não derramou Seu sangue precioso para tornar a salvação de todos meramente possível, mas para torná-la infalivelmente certa para os Seus remidos. — John Owen",
+    summary: "O sacrifício expiatório de Cristo na cruz teve o propósito determinado e eficaz de redimir e garantir a salvação do Seu rebanho escolhido.",
+    full_content: "Este ponto diz respeito ao desígnio e eficácia do sacrifício de Cristo. Em termos de mérito e suficiência intrínseca, o sangue de Cristo tem valor infinito, capaz de salvar incontáveis mundos.\n\nEntretanto, em termos de intenção salvífica particular, Cristo morreu como Substituto real e penal de Suas ovelhas (Mateus 1:21; Efésios 5:25). Ele não apenas abriu uma porta para o homem tentar entrar por si só, mas comprou com Seu sangue a justificação, a reconciliação e o dom do Espírito Santo para todos aqueles que o Pai Lhe confiou (João 17:9)."
+  },
+  {
+    id: "tulip-irresistible-grace",
+    category: "tulip",
+    tag: "Doutrinas da Graça",
+    title: "I — Graça Irresistível / Chamado Eficaz (Irresistible Grace)",
+    author: "Sínodo de Dort • 1618-1619",
+    bible_ref: "João 6:37",
+    bible_text: "Todo o que o Pai me dá virá a mim; e o que vem a mim de maneira nenhuma o lançarei fora.",
+    quote: "Quando a graça soberana de Deus chama uma alma morta para fora da sepultura do pecado, ela não pode resistir à vida; ela se levanta alegremente para contemplar o Salvador.",
+    summary: "O Espírito Santo vence soberanamente a rebeldia natural do coração do eleito, gerando novo nascimento e atraindo-o de forma doce e eficaz a Cristo.",
+    full_content: "A graça irresistível refere-se à obra sobrenatural do Espírito Santo na regeneração. Enquanto o chamado externo do Evangelho é proclamado indiscriminadamente a todos os homens (e muitas vezes resistido), o chamado interno e eficaz opera a ressurreição espiritual da alma.\n\nDeus não coage a vontade humana contra o seu desejo; Ele transforma a própria vontade! O Senhor retira o coração de pedra rebelde e coloca um coração de carne sensível (Ezequiel 36:26), fazendo com que o pecador veja a glória de Cristo e corra voluntariamente aos Seus braços salvadores."
+  },
+  {
+    id: "tulip-perseverance",
+    category: "tulip",
+    tag: "Doutrinas da Graça",
+    title: "P — Perseverança dos Santos (Perseverance of the Saints)",
+    author: "Sínodo de Dort • 1618-1619",
+    bible_ref: "Romanos 8:38-39",
+    bible_text: "Porque estou certo de que, nem a morte, nem a vida, nem os anjos, nem os principados... nem alguma outra criatura nos poderá separar do amor de Deus, que está em Cristo Jesus nosso Senhor.",
+    quote: "As ovelhas de Cristo podem escorregar e cair no lamaçal da fraqueza, mas o Bom Pastor as segura com mão onipotente; nenhuma jamais se perderá no inferno. — J.C. Ryle",
+    summary: "Todos aqueles que foram regenerados pelo Espírito Santo jamais cairão total ou finalmente da graça; são preservados pelo poder de Deus até o fim.",
+    full_content: "A perseverança dos santos ensina que a salvação iniciada por Deus será infalivelmente completada por Ele. Como afirmou o apóstolo Paulo: 'Tendo por certo isto mesmo, que aquele que em vós começou a boa obra a aperfeiçoará até ao dia de Jesus Cristo' (Filipenses 1:6).\n\nNossa segurança eterna não repousa em nossa firmeza passageira, mas na promessa inabalável do Pai, na intercessão sacerdotal contínua de Cristo nos céus e no selo indestrutível do Espírito Santo (João 10:28-29)."
+  },
+
+  // --- 3. CATECISMOS E CONFISSÕES HISTÓRICAS ---
+  {
+    id: "westminster-q1",
+    category: "creeds",
+    tag: "Catecismo Histórico",
+    title: "O Fim Supremo do Homem (Breve Catecismo P. 1)",
+    author: "Assembleia de Westminster • Londres, 1647",
+    bible_ref: "1 Coríntios 10:31",
+    bible_text: "Portanto, quer comais quer bebais, ou façais outra qualquer coisa, fazei tudo para glória de Deus.",
+    quote: "Pergunta 1: Qual é o fim supremo e principal do homem? Resposta: O fim supremo e principal do homem é glorificar a Deus, e alegrar-se nele para sempre.",
+    summary: "A primeira e mais célebre pergunta do Breve Catecismo de Westminster resume o propósito da existência de toda criatura.",
+    full_content: "O Breve Catecismo de Westminster foi elaborado na Abadia de Westminster por puritanos piedosos para instruir as famílias nas verdades bíblicas fundamentais.\n\nA Pergunta 1 estabelece que fomos criados não para o egoísmo, riqueza passageira ou fama mundana, mas para refletir a majestade de nosso Criador e encontrar em Sua comunhão a mais doce, santa e eterna alegria (Salmo 73:25-26)."
+  },
+  {
+    id: "westminster-q33",
+    category: "creeds",
+    tag: "Catecismo Histórico",
+    title: "A Doutrina da Justificação (Breve Catecismo P. 33)",
+    author: "Assembleia de Westminster • Londres, 1647",
+    bible_ref: "2 Coríntios 5:21",
+    bible_text: "Àquele que não conheceu pecado, o fez pecado por nós; para que nele fôssemos feitos justiça de Deus.",
+    quote: "Pergunta 33: O que é justificação? Resposta: A justificação é um ato da livre graça de Deus, no qual Ele perdoa todos os nossos pecados e nos aceita como justos diante de si, somente por causa da justiça de Cristo a nós imputada, e recebida só pela fé.",
+    summary: "A definição clássica e cirúrgica do ato judicial pelo qual Deus absolve e declara o pecador justificado para sempre.",
+    full_content: "Esta resposta do catecismo sintetiza com clareza cristalina a revelação neotestamentária: a justificação é um ato (instantâneo e definitivo), e não um processo; procede da livre graça divina; cancela toda a culpa dos pecados; e imputa a perfeita retidão de Jesus Cristo recebida exclusivamente pela fé."
+  },
+  {
+    id: "heidelberg-q1",
+    category: "creeds",
+    tag: "Confissão de Fé",
+    title: "O Único Consolo na Vida e na Morte (Heidelberg P. 1)",
+    author: "Zacarias Ursino & Caspar Oleviano • Heidelberg, 1563",
+    bible_ref: "Romanos 14:7-8",
+    bible_text: "Porque nenhum de nós vive para si, e nenhum morre para si. Porque, se vivemos, para o Senhor vivemos; se morremos, para o Senhor morremos.",
+    quote: "Pergunta 1: Qual é o teu único consolo, tanto na vida como na morte? Resposta: É que eu, de corpo e alma, na vida e na morte, não pertenço a mim mesmo, mas pertenço ao meu fiel Salvador Jesus Cristo...",
+    summary: "A abertura mais consoladora e pastoral de todas as confissões da Reforma Continental europeia.",
+    full_content: "O Catecismo de Heidelberg (1563) foi formulado para pastorear o povo cristão na Alemanha reformada. Sua primeira resposta é um cântico de paz: saber que pertencemos a Cristo, que pagou com Seu sangue por todas as nossas ofensas, nos livrou do poder das trevas e governa todas as coisas de modo que nem um fio de cabelo caia da cabeça sem a vontade do Pai Celeste."
+  },
+  {
+    id: "luther-95-theses",
+    category: "creeds",
+    tag: "Marco Histórico",
+    title: "As 95 Teses contra as Indulgências (1517)",
+    author: "Martinho Lutero • Castelo de Wittenberg, 1517",
+    bible_ref: "Mateus 4:17",
+    bible_text: "Desde então começou Jesus a pregar, e a dizer: Arrependei-vos, porque é chegado o reino dos céus.",
+    quote: "Tese 62: O verdadeiro tesouro da Igreja é o santíssimo Evangelho da glória e da graça de Deus.",
+    summary: "O marco inicial da Reforma Protestante que denunciou o comércio mercantil de indulgências e restaurou o Evangelho da graça.",
+    full_content: "Em 31 de Outubro de 1517, Martinho Lutero afixou à porta da Igreja de Wittenberg as suas 95 Teses convocando um debate acadêmico. Ele desafiou a venda de perdões papais e demonstrou pelas Escrituras que o arrependimento bíblico não consiste em pagamentos exteriores, mas em uma renovação contínua da alma operada pelo Espírito Santo perante Deus."
+  },
+
+  // --- 4. TRATADOS E CLÁSSICOS REFORMADOS & PURITANOS ---
+  {
+    id: "calvin-institutes",
+    category: "classics",
+    tag: "Tratado Clássico",
+    title: "As Institutas da Religião Cristã (1536)",
+    author: "João Calvino • Genebra, 1536-1559",
+    bible_ref: "Salmos 19:1",
+    bible_text: "Os céus declaram a glória de Deus e o firmamento anuncia a obra das suas mãos.",
+    quote: "Quase toda a sabedoria que possuímos consiste em duas partes inseparáveis: o conhecimento verdadeiro de Deus e o conhecimento sincero de nós mesmos.",
+    summary: "A maior obra sistemática e exegética da Reforma, estruturada com rigor bíblico para guiar a fé dos santos.",
+    full_content: "Escrita originariamente em Basileia para defender os protestantes perseguidos perante o rei da França, As Institutas guiam o leitor através de quatro partes magnas: o conhecimento de Deus o Criador; a revelação de Deus o Redentor em Cristo; a apropriação da graça salvífica pela fé; e a vida na igreja do Deus vivo."
+  },
+  {
+    id: "owen-mortification",
+    category: "classics",
+    tag: "Tratado Puritano",
+    title: "A Mortificação do Pecado nos Crentes (1656)",
+    author: "John Owen • Oxford, 1656",
+    bible_ref: "Romanos 8:13",
+    bible_text: "Porque, se viverdes segundo a carne, morrereis; mas, se pelo Espírito mortificardes as obras do corpo, vivereis.",
+    quote: "Esteja sempre matando o pecado, ou o pecado estará matando a você. Não pode existir armistício na guerra santa pela pureza do coração.",
+    summary: "O clássico puritano incomparável sobre a guerra interior da alma cristã e o poder do Espírito Santo na santificação prática.",
+    full_content: "John Owen adverte que o pecado remanescente na carne do crente é insidioso e nunca cessa de agir. O dever diário do crente é aplicar o sangue da cruz e a eficácia da ressurreição de Cristo ao coração, mortificando as más concupiscências pelo poder do Espírito Santo e crescendo em amor a Deus."
+  },
+  {
+    id: "watson-repentance",
+    category: "classics",
+    tag: "Tratado Puritano",
+    title: "A Doutrina Bíblica do Arrependimento (1668)",
+    author: "Thomas Watson • Londres, 1668",
+    bible_ref: "Lucas 13:3",
+    bible_text: "Não, vos digo; antes, se não vos arrependerdes, todos de igual modo perecereis.",
+    quote: "O arrependimento sincero é a lágrima santa que brilha nos olhos da fé quando ela contempla o Redentor ferido pelas nossas iniquidades.",
+    summary: "Um diagnóstico bíblico profundo sobre os seis ingredientes genuínos do arrependimento evangélico que conduz à salvação.",
+    full_content: "Thomas Watson examina os seis componentes do verdadeiro arrependimento segundo a Bíblia: reconhecimento da gravidade do pecado; tristeza piedosa perante Deus; confissão humilde; santo pudor; ódio sagrado contra o pecado; e abandono definitivo das velhas práticas mundanas para andar em retidão."
+  },
+  {
+    id: "spurgeon-defense",
+    category: "classics",
+    tag: "Tratado Clássico",
+    title: "Em Defesa do Evangelho da Graça Soberana",
+    author: "Charles H. Spurgeon • Londres, 1861",
+    bible_ref: "Jonas 2:9",
+    bible_text: "Ao SENHOR pertence a salvação.",
+    quote: "Não tenho hesitação em declarar que a teologia da graça soberana nada mais é do que o antigo e bendito Evangelho apostólico em toda a sua plenitude.",
+    summary: "O sermão triunfante do Príncipe dos Pregadores demonstrando que a salvação do início ao fim é operada unicamente pelo Senhor.",
+    full_content: "Spurgeon demonstra com calor pastoral que as Doutrinas da Graça não esfriam o zelo evangelístico, mas o fortalecem! Saber que Deus tem um povo e que a Sua Palavra jamais volta vazia nos enche de coragem para pregar o Evangelho com fidelidade a cada criatura na terra."
+  },
+  {
+    id: "luther-freedom",
+    category: "classics",
+    tag: "Tratado Clássico",
+    title: "Da Liberdade do Cristão (1520)",
+    author: "Martinho Lutero • Wittenberg, 1520",
+    bible_ref: "Gálatas 5:1",
+    bible_text: "Estai, pois, firmes na liberdade com que Cristo nos libertou, e não torneis a meter-vos debaixo do jugo da servidão.",
+    quote: "O cristão é um senhor livre sobre todas as coisas e não sujeito a ninguém pela fé; o cristão é um servo prestativo em todas as coisas e sujeito a todos pelo amor.",
+    summary: "O célebre paradoxo luterano que explica como a fé nos liberta da condenação da lei e o amor nos impele a servir o próximo.",
+    full_content: "Neste breve e brilhante tratado dedicado ao Papa Leão X, Lutero esclarece a verdadeira liberdade evangélica. Pela fé em Cristo, a consciência do crente é libertada de qualquer condenação e mérito servil; pelo amor decorrente da fé, o crente faz-se servo voluntário de seu irmão na prática das boas obras."
+  }
+];
 
 // Devocionais Clássicos Reformados embutidos
 const STATIC_DEVOTIONALS = [
@@ -111,6 +358,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupModals();
   setupDockActions();
   setupKeyboardShortcuts();
+  setupReformationEvents();
 
   await checkModeAndLoadBooks();
   await loadCurrentChapter();
@@ -249,6 +497,8 @@ function switchTab(tab) {
     if (state.currentBook) {
       updateChapterTitles();
     }
+  } else if (tab === "reformation") {
+    loadReformationView();
   } else if (tab === "devotionals") {
     loadDevotionals();
   } else if (tab === "prayers") {
@@ -343,7 +593,7 @@ function updateNavButtonsState() {
 
   const isFirst = state.currentBook.id === state.books[0].id && state.currentChapter === 1;
   const lastBook = state.books[state.books.length - 1];
-  const isLast = state.currentBook.id === lastBook.id && state.currentChapter === lastBook.chapter_count;
+  const isLast = lastBook && state.currentBook.id === lastBook.id && state.currentChapter === lastBook.chapter_count;
 
   const prevBtn = document.getElementById("desktop-prev-chap");
   const nextBtn = document.getElementById("desktop-next-chap");
@@ -739,6 +989,125 @@ async function removeHighlight() {
   }
   closeVerseDock();
 }
+
+// ==========================================
+// ESTANTE DA REFORMA PROTESTANTE
+// ==========================================
+function setupReformationEvents() {
+  // Filtros por Categoria
+  document.querySelectorAll(".ref-filter-pill").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".ref-filter-pill").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      state.reformationFilter = btn.dataset.filter;
+      renderReformationShelf();
+    });
+  });
+
+  // Busca em tempo real
+  const searchInput = document.getElementById("reformation-search-input");
+  if (searchInput) {
+    searchInput.addEventListener("input", (e) => {
+      state.reformationSearch = e.target.value.toLowerCase().trim();
+      renderReformationShelf();
+    });
+  }
+
+  // Botão Ir para Passagem no Modal
+  const btnDocPassage = document.getElementById("doc-btn-goto-passage");
+  if (btnDocPassage) {
+    btnDocPassage.addEventListener("click", () => {
+      if (state.activeReformationDoc) {
+        closeModal("modal-reformation-doc");
+        goToPassage(state.activeReformationDoc.bible_ref);
+      }
+    });
+  }
+}
+
+function loadReformationView() {
+  const countAll = document.getElementById("ref-count-all");
+  if (countAll) countAll.innerText = REFORMATION_DATA.length;
+  renderReformationShelf();
+}
+
+function renderReformationShelf() {
+  const container = document.getElementById("reformation-shelf-grid");
+  if (!container) return;
+  container.innerHTML = "";
+
+  const filter = state.reformationFilter;
+  const search = state.reformationSearch;
+
+  const filtered = REFORMATION_DATA.filter((item) => {
+    const matchesFilter = filter === "all" || item.category === filter;
+    const matchesSearch =
+      !search ||
+      item.title.toLowerCase().includes(search) ||
+      item.author.toLowerCase().includes(search) ||
+      item.summary.toLowerCase().includes(search) ||
+      item.tag.toLowerCase().includes(search) ||
+      item.bible_ref.toLowerCase().includes(search);
+    return matchesFilter && matchesSearch;
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center; padding:48px 20px; color:var(--text-muted); grid-column: 1 / -1;">
+        <p style="font-size:18px; font-weight:700; margin-bottom:6px;">Nenhuma obra reformada encontrada.</p>
+        <p style="font-size:14px;">Tente pesquisar por outro termo como "Sola", "Lutero", "Calvino", "Graça" ou "Westminster".</p>
+      </div>
+    `;
+    return;
+  }
+
+  filtered.forEach((item) => {
+    const card = document.createElement("div");
+    card.className = `ref-book-card cat-${item.category}`;
+
+    card.innerHTML = `
+      <div>
+        <div class="ref-card-header">
+          <span class="ref-card-tag">${item.tag}</span>
+        </div>
+        <div class="ref-card-title">${item.title}</div>
+        <div class="ref-card-author">${item.author}</div>
+        <div class="ref-card-bible">
+          <span>📖</span>
+          <span>${item.bible_ref} (ACF)</span>
+        </div>
+        <p class="ref-card-desc">${item.summary}</p>
+      </div>
+      <div class="ref-card-actions">
+        <button class="btn-nav primary" style="font-size:13px; padding:7px 16px; flex:1;" onclick="openReformationDoc('${item.id}')">
+          Examinar Documento
+        </button>
+        <button class="btn-nav" style="font-size:13px; padding:7px 14px;" onclick="goToPassage('${item.bible_ref}')" title="Ler na Bíblia">
+          Ler Passagem →
+        </button>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function openReformationDoc(id) {
+  const doc = REFORMATION_DATA.find((x) => x.id === id);
+  if (!doc) return;
+
+  state.activeReformationDoc = doc;
+
+  document.getElementById("doc-modal-tag").innerText = doc.tag;
+  document.getElementById("doc-modal-title").innerText = doc.title;
+  document.getElementById("doc-modal-author").innerText = doc.author;
+  document.getElementById("doc-modal-bible-ref").innerText = `${doc.bible_ref} (Almeida Corrigida Fiel)`;
+  document.getElementById("doc-modal-bible-text").innerText = `"${doc.bible_text}"`;
+  document.getElementById("doc-modal-quote-text").innerText = doc.quote;
+  document.getElementById("doc-modal-body-text").innerText = doc.full_content;
+
+  openModal("modal-reformation-doc");
+}
+window.openReformationDoc = openReformationDoc;
 
 // ==========================================
 // DEVOCIONAIS REFORMADOS (MONERGISMO)

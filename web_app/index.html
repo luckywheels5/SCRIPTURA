@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Scriptura — A Bíblia Sagrada (ACF)</title>
+  <title>Scriptura — A Bíblia Sagrada (ACF) & Estante da Reforma</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23ba2026'/><text x='50' y='68' font-size='56' font-family='sans-serif' font-weight='900' fill='white' text-anchor='middle'>S</text></svg>">
 </head>
@@ -27,6 +27,9 @@
       <nav class="desktop-nav-menu">
         <button class="desktop-nav-link active" data-tab="bible">
           <span>Bíblia</span>
+        </button>
+        <button class="desktop-nav-link" data-tab="reformation">
+          <span>Estante da Reforma</span>
         </button>
         <button class="desktop-nav-link" data-tab="devotionals">
           <span>Planos</span>
@@ -110,7 +113,52 @@
       </div>
     </section>
 
-    <!-- 2. DEVOCIONAIS & PLANOS -->
+    <!-- 2. ESTANTE DA REFORMA PROTESTANTE -->
+    <section id="view-reformation" class="view-section">
+      <div class="content-desktop-wrap">
+        <!-- Banner Histórico Hero da Reforma -->
+        <div class="reformation-hero-banner">
+          <div class="hero-crest">
+            <span class="crest-text">POST TENEBRAS LUX</span>
+          </div>
+          <div class="hero-tag">SÉCULO XVI • PATRIMÔNIO TEOLÓGICO REFORMADO & PURITANO</div>
+          <h2>Estante da Reforma Protestante</h2>
+          <p>
+            Mergulhe no rico acervo doutrinário que resgatou a autoridade inerrante das Sagradas Escrituras e o Evangelho da justificação pela fé somente em Cristo. Estude os Cinco Solas, as Doutrinas da Graça (TULIP), confissões de fé históricas, catecismos e tratados clássicos dos reformadores.
+          </p>
+        </div>
+
+        <!-- Controles de Busca e Filtros -->
+        <div class="reformation-controls">
+          <div class="reformation-search-wrap">
+            <input type="text" id="reformation-search-input" class="picker-search-input" placeholder="🔍 Pesquisar na estante (ex: Sola Scriptura, Lutero, Calvino, Westminster, TULIP)...">
+          </div>
+
+          <div class="reformation-filter-tabs">
+            <button class="ref-filter-pill active" data-filter="all">
+              Todas as Obras (<span id="ref-count-all">0</span>)
+            </button>
+            <button class="ref-filter-pill" data-filter="solas">
+              5 Solas
+            </button>
+            <button class="ref-filter-pill" data-filter="tulip">
+              Doutrinas da Graça (TULIP)
+            </button>
+            <button class="ref-filter-pill" data-filter="creeds">
+              Confissões & Catecismos
+            </button>
+            <button class="ref-filter-pill" data-filter="classics">
+              Tratados Clássicos
+            </button>
+          </div>
+        </div>
+
+        <!-- Grade de Obras da Estante -->
+        <div id="reformation-shelf-grid" class="reformation-grid"></div>
+      </div>
+    </section>
+
+    <!-- 3. DEVOCIONAIS & PLANOS -->
     <section id="view-devotionals" class="view-section">
       <div class="content-desktop-wrap">
         <div class="yv-featured-banner">
@@ -123,7 +171,7 @@
       </div>
     </section>
 
-    <!-- 3. MURAL DE ORAÇÕES (YOUVERSION PRAYER) -->
+    <!-- 4. MURAL DE ORAÇÕES (YOUVERSION PRAYER) -->
     <section id="view-prayers" class="view-section">
       <div class="content-desktop-wrap">
         <div class="prayer-section-header">
@@ -154,7 +202,7 @@
       </button>
     </section>
 
-    <!-- 4. PROGRESSO & ATIVIDADE (YOUVERSION PROFILE) -->
+    <!-- 5. PROGRESSO & ATIVIDADE (YOUVERSION PROFILE) -->
     <section id="view-progress" class="view-section">
       <div class="content-desktop-wrap">
         <!-- Card do Usuário -->
@@ -233,6 +281,10 @@
       <span class="nav-icon">📖</span>
       <span>Bíblia</span>
     </button>
+    <button class="nav-item" data-tab="reformation">
+      <span class="nav-icon">📜</span>
+      <span>Reforma</span>
+    </button>
     <button class="nav-item" data-tab="devotionals">
       <span class="nav-icon">📋</span>
       <span>Planos</span>
@@ -276,6 +328,46 @@
       <span>Orar</span>
     </button>
     <button id="dock-btn-close" class="dock-close-btn" title="Fechar barra">✕</button>
+  </div>
+</div>
+
+<!-- MODAL: LEITOR DE DOCUMENTO DA ESTANTE DA REFORMA -->
+<div id="modal-reformation-doc" class="modal-overlay">
+  <div class="modal-sheet doc-reader-sheet">
+    <div class="doc-reader-header">
+      <div>
+        <span id="doc-modal-tag" class="doc-tag">OS 5 SOLAS</span>
+        <h2 id="doc-modal-title" style="font-size: 22px; font-weight: 800; margin-top: 4px;">Sola Scriptura</h2>
+        <div id="doc-modal-author" style="font-size: 13px; color: var(--text-secondary); margin-top: 2px;">Martinho Lutero • 1521</div>
+      </div>
+      <button class="icon-btn" onclick="closeModal('modal-reformation-doc')">✕</button>
+    </div>
+
+    <!-- Passagem Bíblica em Destaque (ACF) -->
+    <div id="doc-modal-passage-box" class="doc-passage-card">
+      <div style="font-size: 11px; font-weight: 800; color: var(--yv-red); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px;">FUNDAMENTO BÍBLICO (ACF)</div>
+      <div id="doc-modal-bible-ref" style="font-weight: 800; font-size: 16px; margin-bottom: 6px;">2 Timóteo 3:16-17</div>
+      <div id="doc-modal-bible-text" style="font-style: italic; font-size: 14px; line-height: 1.6; margin-bottom: 12px; color: var(--text);"></div>
+      <button id="doc-btn-goto-passage" class="btn-nav primary" style="font-size: 12px; padding: 6px 14px;">
+        Ler Passagem na Bíblia →
+      </button>
+    </div>
+
+    <!-- Citação Histórica -->
+    <div id="doc-modal-quote-box" class="doc-quote-card">
+      <div style="font-size: 11px; font-weight: 800; color: var(--text-secondary); letter-spacing: 1px; margin-bottom: 6px;">CITAÇÃO HISTÓRICA DOS REFORMADORES</div>
+      <blockquote id="doc-modal-quote-text" style="font-style: italic; font-size: 14px; line-height: 1.6; color: var(--text);"></blockquote>
+    </div>
+
+    <!-- Conteúdo Teológico / Exposição -->
+    <div class="doc-content-body">
+      <div style="font-size: 12px; font-weight: 800; color: var(--text-secondary); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px;">EXPOSIÇÃO DOUTRINÁRIA & SIGNIFICADO</div>
+      <div id="doc-modal-body-text" style="font-size: 15px; line-height: 1.8; color: var(--text); white-space: pre-line;"></div>
+    </div>
+
+    <div style="display: flex; justify-content: flex-end; margin-top: 24px; border-top: 1px solid var(--border); padding-top: 16px;">
+      <button class="btn-nav" onclick="closeModal('modal-reformation-doc')">Fechar Leitura</button>
+    </div>
   </div>
 </div>
 
