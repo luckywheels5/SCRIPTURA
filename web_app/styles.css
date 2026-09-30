@@ -1,54 +1,69 @@
+/* ==========================================================================
+   SCRIPTURA APP — Design System YouVersion (Estética Oficial Bíblia YouVersion)
+   ========================================================================== */
+
 :root {
-  /* Paleta Sóbria, Neutra e Clássica (Slate & Navy Editorial) */
-  --primary: #1e293b;
-  --primary-dark: #0f172a;
-  --accent: #2563eb;
-  --bronze-accent: #9a6a2f;
+  /* YouVersion Signature Palette */
+  --yv-red: #ba2026;
+  --yv-red-hover: #9c151b;
+  --yv-red-light: rgba(186, 32, 38, 0.08);
 
-  --bg: #f8fafc;
+  --bg: #ffffff;
   --surface: #ffffff;
-  --text: #0f172a;
-  --text-muted: #64748b;
-  --border: #e2e8f0;
+  --surface-secondary: #f4f5f7;
+  --surface-hover: #eceef2;
+  --text: #1a1a1a;
+  --text-secondary: #6e7681;
+  --text-muted: #8c959f;
+  --border: #e1e4e8;
+  --divider: #eaecef;
 
-  --font-family: Georgia, serif;
+  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --reader-font-size: 19px;
-  --line-height: 1.7;
+  --line-height: 1.85;
 
-  /* 5 Cores de Marca-texto (equilibradas e suaves) */
-  --hl-verde: #d1fae5;
-  --hl-amarelo: #fef3c7;
-  --hl-azul: #dbeafe;
-  --hl-laranja: #ffedd5;
-  --hl-rosa: #fce7f3;
+  /* 5 Cores Oficiais de Marca-texto YouVersion */
+  --hl-verde: #c8e6c9;
+  --hl-amarelo: #fff9c4;
+  --hl-azul: #bbdefb;
+  --hl-laranja: #ffe0b2;
+  --hl-rosa: #f8bbd0;
 }
 
 [data-theme="sepia"] {
-  --bg: #f4efe6;
-  --surface: #e9e3d8;
-  --text: #2a241e;
-  --text-muted: #736758;
-  --border: #dcd4c7;
+  --bg: #f7f3e8;
+  --surface: #f7f3e8;
+  --surface-secondary: #ede7d8;
+  --surface-hover: #e2dbca;
+  --text: #2d261e;
+  --text-secondary: #756a5c;
+  --text-muted: #8f8373;
+  --border: #dfd7c5;
+  --divider: #e5ded0;
 
-  --hl-verde: #ccebd7;
-  --hl-amarelo: #f8e7ad;
-  --hl-azul: #d3e2f8;
-  --hl-laranja: #f9dbc3;
-  --hl-rosa: #f4d4e3;
+  --hl-verde: #c5e3c6;
+  --hl-amarelo: #f9f0b8;
+  --hl-azul: #bfdaf5;
+  --hl-laranja: #fadab0;
+  --hl-rosa: #f4b8cb;
 }
 
 [data-theme="dark"] {
-  --bg: #090d16;
-  --surface: #151d2c;
-  --text: #f1f5f9;
-  --text-muted: #94a3b8;
-  --border: #1e293b;
+  --bg: #121212;
+  --surface: #1e1e1e;
+  --surface-secondary: #2a2a2a;
+  --surface-hover: #333333;
+  --text: #f0f0f0;
+  --text-secondary: #a0a0a0;
+  --text-muted: #707070;
+  --border: #2e2e2e;
+  --divider: #262626;
 
-  --hl-verde: rgba(16, 185, 129, 0.25);
-  --hl-amarelo: rgba(245, 158, 11, 0.25);
-  --hl-azul: rgba(59, 130, 246, 0.25);
-  --hl-laranja: rgba(249, 115, 22, 0.25);
-  --hl-rosa: rgba(236, 72, 153, 0.25);
+  --hl-verde: rgba(76, 175, 80, 0.35);
+  --hl-amarelo: rgba(255, 235, 59, 0.35);
+  --hl-azul: rgba(33, 150, 243, 0.35);
+  --hl-laranja: rgba(255, 152, 0, 0.35);
+  --hl-rosa: rgba(233, 30, 99, 0.35);
 }
 
 * {
@@ -59,7 +74,7 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--font-family);
   background-color: var(--bg);
   color: var(--text);
   line-height: 1.5;
@@ -68,6 +83,7 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* APP SHELL */
@@ -75,55 +91,69 @@ body {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  max-width: 880px;
+  max-width: 960px;
   width: 100%;
   margin: 0 auto;
   position: relative;
   background-color: var(--bg);
-  box-shadow: 0 0 40px rgba(0, 0, 0, 0.06);
 }
 
-/* APP BAR */
+/* TOPBAR ESTILO YOUVERSION */
 header#app-header {
-  height: 60px;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
-  background-color: var(--bg);
+  background-color: var(--surface);
   border-bottom: 1px solid var(--border);
-  z-index: 10;
+  z-index: 20;
 }
 
-.header-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--primary-dark);
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.yv-logo-badge {
+  width: 34px;
+  height: 34px;
+  background-color: var(--yv-red);
+  color: #ffffff;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 17px;
+  letter-spacing: -0.5px;
+  box-shadow: 0 2px 6px rgba(186, 32, 38, 0.3);
+}
+
+/* Pílulas de Navegação YouVersion */
+.yv-pill-btn {
+  background-color: var(--surface-secondary);
+  border: 1px solid var(--border);
+  color: var(--text);
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 16px;
-  transition: background-color 0.15s;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s;
 }
 
-[data-theme="dark"] .header-btn {
-  color: var(--text);
-}
-
-.header-btn:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-}
-
-[data-theme="dark"] .header-btn:hover {
-  background-color: rgba(255, 255, 255, 0.08);
+.yv-pill-btn:hover {
+  background-color: var(--surface-hover);
 }
 
 .header-actions {
   display: flex;
+  align-items: center;
   gap: 6px;
 }
 
@@ -131,27 +161,29 @@ header#app-header {
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--text-muted);
-  width: 38px;
-  height: 38px;
+  color: var(--text-secondary);
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 16px;
+  font-weight: 700;
   transition: background-color 0.15s, color 0.15s;
 }
 
 .icon-btn:hover {
-  background-color: var(--border);
+  background-color: var(--surface-secondary);
   color: var(--text);
 }
 
 .icon-btn.completed {
   color: #10b981;
+  background-color: rgba(16, 185, 129, 0.1);
 }
 
-/* VIEWS WRAPPER */
+/* VIEWS CONTAINER */
 main#views-container {
   flex: 1;
   overflow-y: auto;
@@ -160,45 +192,38 @@ main#views-container {
 
 .view-section {
   display: none;
-  padding: 24px 24px 80px;
-  max-width: 800px;
+  padding: 24px 20px 90px;
+  max-width: 760px;
   margin: 0 auto;
-  animation: fadeIn 0.15s ease-out;
 }
 
 .view-section.active {
   display: block;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(3px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* LEITOR BÍBLICO */
+/* LEITOR BÍBLICO (YOUVERSION STYLE) */
 #reader-header-banner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
-  padding-bottom: 10px;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
   border-bottom: 1px solid var(--border);
 }
 
 .acf-badge {
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.8px;
-  color: var(--primary);
-  background-color: rgba(30, 41, 59, 0.08);
-  padding: 4px 9px;
-  border-radius: 6px;
-  border: 1px solid var(--border);
+  letter-spacing: 0.5px;
+  color: var(--yv-red);
+  background-color: var(--yv-red-light);
+  padding: 4px 10px;
+  border-radius: 12px;
 }
 
 [data-theme="dark"] .acf-badge {
-  color: var(--text);
-  background-color: rgba(255, 255, 255, 0.08);
+  color: #ff6b6b;
+  background-color: rgba(255, 107, 107, 0.15);
 }
 
 #reading-completion-toast {
@@ -206,77 +231,82 @@ main#views-container {
   background-color: #d1fae5;
   color: #065f46;
   border: 1px solid #a7f3d0;
-  padding: 10px 16px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  font-size: 13px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  font-size: 14px;
   font-weight: 600;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  animation: fadeIn 0.2s ease;
 }
 
 #reading-completion-toast.visible {
   display: flex;
 }
 
+/* CORPO DO TEXTO (YOUVERSION FLUID READING) */
 #verses-list {
   font-family: var(--font-family);
   font-size: var(--reader-font-size);
   line-height: var(--line-height);
+  letter-spacing: -0.01em;
 }
 
 .verse-item {
-  padding: 5px 8px;
-  margin-bottom: 4px;
-  border-radius: 6px;
+  display: inline;
+  padding: 2px 0;
+  margin: 0;
+  border-radius: 3px;
   cursor: pointer;
-  transition: background-color 0.1s;
+  transition: background-color 0.15s;
 }
 
 .verse-item:hover {
-  filter: brightness(0.96);
+  text-decoration: underline;
+  text-decoration-color: var(--yv-red);
+  text-underline-offset: 4px;
 }
 
 .verse-num {
-  font-size: 0.75em;
+  font-size: 0.72em;
   font-weight: 700;
-  color: var(--primary);
+  color: var(--text-muted);
   vertical-align: super;
-  margin-right: 6px;
+  margin-right: 3px;
+  margin-left: 6px;
   user-select: none;
 }
 
-[data-theme="dark"] .verse-num {
-  color: var(--accent);
+.verse-item.selected {
+  border-bottom: 2px solid var(--yv-red);
+  background-color: rgba(186, 32, 38, 0.06);
 }
 
-.verse-text {
-  display: inline;
-}
-
-/* Cores de destaque nos versículos */
+/* Destaques em cores nos versículos */
 .verse-item.hl-verde { background-color: var(--hl-verde); }
 .verse-item.hl-amarelo { background-color: var(--hl-amarelo); }
 .verse-item.hl-azul { background-color: var(--hl-azul); }
 .verse-item.hl-laranja { background-color: var(--hl-laranja); }
 .verse-item.hl-rosa { background-color: var(--hl-rosa); }
 
-/* NAVEGAÇÃO DE CAPÍTULO */
+/* NAVEGAÇÃO DE CAPÍTULO NO RODAPÉ */
 .chapter-nav-footer {
   display: flex;
   justify-content: space-between;
-  margin-top: 40px;
-  padding-top: 20px;
+  margin-top: 48px;
+  padding-top: 24px;
   border-top: 1px solid var(--border);
 }
 
 .btn-nav {
-  padding: 10px 18px;
-  border-radius: 8px;
+  padding: 12px 20px;
+  border-radius: 24px;
   border: 1px solid var(--border);
-  background-color: var(--surface);
+  background-color: var(--surface-secondary);
   color: var(--text);
   font-weight: 600;
+  font-size: 14px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -285,115 +315,110 @@ main#views-container {
 }
 
 .btn-nav:hover {
-  background-color: var(--border);
+  background-color: var(--surface-hover);
 }
 
 .btn-nav.primary {
-  background-color: var(--primary);
+  background-color: var(--yv-red);
   color: #ffffff;
   border: none;
 }
 
 .btn-nav.primary:hover {
-  background-color: var(--primary-dark);
+  background-color: var(--yv-red-hover);
 }
 
-/* DEVOCIONAIS */
-.banner-card {
-  background: linear-gradient(135deg, #0f172a, #1e293b);
+/* BANNER DE VERSÍCULO / DEVOCIONAL YOUVERSION */
+.yv-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.yv-featured-banner {
+  background: linear-gradient(135deg, #222831, #1a1a2e);
   color: #ffffff;
-  padding: 24px;
-  border-radius: 14px;
+  padding: 26px;
+  border-radius: 18px;
   margin-bottom: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.banner-card h2 {
-  font-size: 21px;
-  font-weight: 700;
+.yv-featured-banner h2 {
+  font-size: 22px;
+  font-weight: 800;
   margin: 10px 0 6px;
 }
 
-.banner-card p {
-  color: rgba(255, 255, 255, 0.75);
-  font-size: 13px;
-  line-height: 1.45;
+.yv-featured-banner p {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 13.5px;
+  line-height: 1.5;
 }
 
-.card {
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 16px;
-}
-
-.card-title {
-  font-size: 18px;
-  font-weight: 700;
-  margin-bottom: 6px;
-  color: var(--text);
-}
-
-.passage-badge {
+.badge-tag {
   display: inline-block;
-  background-color: rgba(37, 99, 235, 0.1);
-  color: var(--accent);
+  background-color: var(--surface-secondary);
+  color: var(--text-secondary);
   padding: 4px 10px;
-  border-radius: 6px;
+  border-radius: 12px;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   margin-bottom: 12px;
 }
 
-/* ORAÇÕES */
+/* ABAS DE PÍLULAS (ESTILO YOUVERSION) */
 .tab-pills {
   display: flex;
-  gap: 8px;
+  background-color: var(--surface-secondary);
+  padding: 4px;
+  border-radius: 24px;
   margin-bottom: 20px;
 }
 
 .tab-pill {
   flex: 1;
-  padding: 10px;
+  padding: 9px 16px;
   text-align: center;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background-color: var(--surface);
-  color: var(--text-muted);
+  border-radius: 20px;
+  border: none;
+  background: none;
+  color: var(--text-secondary);
   font-weight: 600;
+  font-size: 13px;
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .tab-pill.active {
-  background-color: var(--primary);
-  color: #ffffff;
-  border-color: var(--primary);
+  background-color: var(--surface);
+  color: var(--text);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
+[data-theme="dark"] .tab-pill.active {
+  background-color: var(--surface-hover);
+  color: #ffffff;
+}
+
+/* ORAÇÕES YOUVERSION */
 .prayer-card {
   background-color: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 16px;
-  margin-bottom: 12px;
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 14px;
 }
 
 .prayer-card.answered {
   border-left: 4px solid #10b981;
 }
 
-.prayer-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 8px;
-}
-
 /* PROGRESSO */
 .progress-bar-container {
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .progress-header {
@@ -406,25 +431,25 @@ main#views-container {
 
 .progress-track {
   height: 8px;
-  background-color: var(--border);
+  background-color: var(--surface-secondary);
   border-radius: 4px;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background-color: var(--primary);
+  background-color: var(--yv-red);
   border-radius: 4px;
   transition: width 0.3s ease;
 }
 
-/* BOTTOM NAVIGATION */
+/* BARRA DE NAVEGAÇÃO INFERIOR ESTILO YOUVERSION */
 nav#bottom-nav {
   height: 64px;
   display: flex;
   background-color: var(--surface);
   border-top: 1px solid var(--border);
-  z-index: 10;
+  z-index: 20;
 }
 
 .nav-item {
@@ -433,29 +458,29 @@ nav#bottom-nav {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   background: none;
   border: none;
   cursor: pointer;
   font-size: 11px;
   font-weight: 600;
-  gap: 4px;
+  gap: 3px;
   transition: color 0.15s;
 }
 
 .nav-item.active {
-  color: var(--primary-dark);
+  color: var(--yv-red);
 }
 
 [data-theme="dark"] .nav-item.active {
-  color: #ffffff;
+  color: #ff6b6b;
 }
 
 .nav-icon {
-  font-size: 19px;
+  font-size: 20px;
 }
 
-/* MODAL & DIALOGS */
+/* FLOATING ACTION SHEET (O CLÁSSICO POP-UP YOUVERSION AO TOCAR NO VERSÍCULO) */
 .modal-overlay {
   display: none;
   position: fixed;
@@ -463,7 +488,7 @@ nav#bottom-nav {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.4);
   z-index: 100;
   align-items: flex-end;
   justify-content: center;
@@ -476,13 +501,13 @@ nav#bottom-nav {
 .modal-sheet {
   background-color: var(--surface);
   width: 100%;
-  max-width: 650px;
-  border-radius: 16px 16px 0 0;
+  max-width: 600px;
+  border-radius: 20px 20px 0 0;
   padding: 24px;
   max-height: 85vh;
   overflow-y: auto;
-  box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.15);
-  animation: slideUp 0.2s ease-out;
+  box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.12);
+  animation: slideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes slideUp {
@@ -490,56 +515,98 @@ nav#bottom-nav {
   to { transform: translateY(0); }
 }
 
-/* COLOR SELECTOR CIRCLES */
+/* MARCADORES DE CORES ESTILO YOUVERSION */
 .colors-row {
   display: flex;
   justify-content: space-around;
-  margin: 16px 0 24px;
+  margin: 18px 0 24px;
 }
 
 .color-circle-btn {
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   border: 3px solid transparent;
   cursor: pointer;
-  transition: transform 0.15s, border-color 0.15s;
+  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .color-circle-btn:hover {
-  transform: scale(1.08);
+  transform: scale(1.1);
 }
 
 .color-circle-btn.selected {
   border-color: var(--text);
 }
 
-.btn-verde { background-color: #059669; }
-.btn-amarelo { background-color: #d97706; }
-.btn-azul { background-color: #2563eb; }
-.btn-laranja { background-color: #ea580c; }
-.btn-rosa { background-color: #db2777; }
+.btn-verde { background-color: #4caf50; }
+.btn-amarelo { background-color: #fdd835; }
+.btn-azul { background-color: #2196f3; }
+.btn-laranja { background-color: #ff9800; }
+.btn-rosa { background-color: #e91e63; }
 
-/* FLOATING BUTTON */
-.fab {
-  position: fixed;
-  bottom: 80px;
-  right: 24px;
-  background-color: var(--primary);
-  color: #ffffff;
-  border: none;
-  border-radius: 28px;
-  padding: 13px 20px;
-  font-weight: 600;
-  font-size: 14px;
-  cursor: pointer;
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.35);
+/* YOUVERSION ACTION ICONS */
+.yv-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  text-align: center;
+}
+
+.yv-action-btn {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 10px 4px;
+  border-radius: 12px;
   transition: background-color 0.15s;
 }
 
+.yv-action-btn:hover {
+  background-color: var(--surface-secondary);
+}
+
+.yv-action-icon {
+  width: 44px;
+  height: 44px;
+  background-color: var(--surface-secondary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 19px;
+  color: var(--text);
+}
+
+/* FLOATING BUTTON (FAB) */
+.fab {
+  position: fixed;
+  bottom: 84px;
+  right: 24px;
+  background-color: var(--yv-red);
+  color: #ffffff;
+  border: none;
+  border-radius: 28px;
+  padding: 14px 22px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(186, 32, 38, 0.4);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: transform 0.15s, background-color 0.15s;
+}
+
 .fab:hover {
-  background-color: var(--primary-dark);
+  background-color: var(--yv-red-hover);
+  transform: translateY(-2px);
 }

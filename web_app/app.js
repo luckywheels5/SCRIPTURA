@@ -885,6 +885,18 @@ function setupModals() {
     }
   });
 
+  const btnPrayerVerse = document.getElementById("btn-modal-prayer-verse");
+  if (btnPrayerVerse) {
+    btnPrayerVerse.addEventListener("click", () => {
+      if (state.activeVerseForModal) {
+        document.getElementById("prayer-title-input").value = `Oração sobre ${state.currentBook.name} ${state.currentChapter}:${state.activeVerseForModal.number}`;
+        document.getElementById("prayer-desc-input").value = `"${state.activeVerseForModal.text}"\n\nSenhor, ajuda-me a viver esta verdade...`;
+        closeModal("modal-highlight");
+        openModal("modal-new-prayer");
+      }
+    });
+  }
+
   document.getElementById("btn-new-prayer-fab").addEventListener("click", () => {
     document.getElementById("prayer-title-input").value = "";
     document.getElementById("prayer-desc-input").value = "";
