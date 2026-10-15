@@ -1583,12 +1583,36 @@ function initModals() {
   const btnCloseSettings = document.getElementById('btn-close-settings-modal');
   const btnSaveSettings = document.getElementById('btn-save-settings');
   const tokenInput = document.getElementById('setting-api-token');
+  const supabaseUrlInput = document.getElementById('setting-supabase-url');
+  const supabaseAnonKeyInput = document.getElementById('setting-supabase-anon-key');
   const btnClearCache = document.getElementById('btn-clear-cache');
+  const linkOpenSupabaseSettings = document.getElementById('link-open-supabase-settings');
 
   if (btnOpenSettings && modalSettings) {
     btnOpenSettings.addEventListener('click', () => {
       if (tokenInput) {
         tokenInput.value = window.appState.apiConfig.token || '';
+      }
+      if (supabaseUrlInput && window.SCRIPTURA_CONFIG) {
+        supabaseUrlInput.value = window.SCRIPTURA_CONFIG.supabaseUrl || '';
+      }
+      if (supabaseAnonKeyInput && window.SCRIPTURA_CONFIG) {
+        supabaseAnonKeyInput.value = window.SCRIPTURA_CONFIG.supabaseAnonKey || '';
+      }
+      modalSettings.classList.remove('hidden');
+    });
+  }
+
+  if (linkOpenSupabaseSettings && modalSettings) {
+    linkOpenSupabaseSettings.addEventListener('click', (e) => {
+      e.preventDefault();
+      const authModal = document.getElementById('auth-modal');
+      if (authModal) authModal.classList.add('hidden');
+      if (supabaseUrlInput && window.SCRIPTURA_CONFIG) {
+        supabaseUrlInput.value = window.SCRIPTURA_CONFIG.supabaseUrl || '';
+      }
+      if (supabaseAnonKeyInput && window.SCRIPTURA_CONFIG) {
+        supabaseAnonKeyInput.value = window.SCRIPTURA_CONFIG.supabaseAnonKey || '';
       }
       modalSettings.classList.remove('hidden');
     });
@@ -1599,10 +1623,17 @@ function initModals() {
   }
 
   if (btnSaveSettings && modalSettings) {
-    btnSaveSettings.addEventListener('click', () => {
+    btnSaveSettings.addEventListener('click', async () => {
       const token = tokenInput ? tokenInput.value.trim() : '';
       window.appState.saveApiConfig({ token });
-      showToast('Configurações salvas!');
+
+      const sbUrl = supabaseUrlInput ? supabaseUrlInput.value.trim() : '';
+      const sbKey = supabaseAnonKeyInput ? supabaseAnonKeyInput.value.trim() : '';
+      if (window.authManager && typeof window.authManager.connectWithCredentials === 'function') {
+        await window.authManager.connectWithCredentials(sbUrl, sbKey);
+      }
+
+      showToast('Configurações e credenciais salvas com sucesso!');
       modalSettings.classList.add('hidden');
     });
   }
@@ -2190,6 +2221,15 @@ function initAuthUI() {
             <circle cx="12" cy="7" r="4"></circle>
           </svg>
         `;
+      }
+    }
+
+    const authUnconfiguredBanner = document.getElementById('auth-unconfigured-banner');
+    if (authUnconfiguredBanner) {
+      if (window.authManager && !window.authManager.isConfigured()) {
+        authUnconfiguredBanner.classList.remove('hidden');
+      } else {
+        authUnconfiguredBanner.classList.add('hidden');
       }
     }
   }

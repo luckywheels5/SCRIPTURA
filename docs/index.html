@@ -673,6 +673,17 @@
         <p class="settings-note">
           Remove o limite anônimo de 20 req/h caso cadastrado na API oficial.
         </p>
+
+        <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border);">
+          <label class="settings-field-label">Nuvem Supabase: Project URL</label>
+          <input type="text" class="settings-input" id="setting-supabase-url" placeholder="https://seu-projeto.supabase.co">
+          
+          <label class="settings-field-label" style="margin-top: 8px;">Nuvem Supabase: Anon Public Key</label>
+          <input type="password" class="settings-input" id="setting-supabase-anon-key" placeholder="eyJhbGciOi...">
+          <p class="settings-note">
+            Necessário para sincronizar destaques, marcadores e progresso de leitura entre dispositivos.
+          </p>
+        </div>
       </div>
       <button class="btn-read-context" id="btn-save-settings" style="width: 100%; background: var(--brand); color: var(--bg); margin-bottom: 8px; border: 1px solid var(--gold);">
         Salvar Preferências
@@ -714,6 +725,13 @@
           </svg>
           <p>
             <strong>Login opcional:</strong> O Scriptura continua funcionando normalmente sem conta, salvando localmente. Criar uma conta permite sincronizar seus marcadores, destaques e progresso entre todos os seus dispositivos.
+          </p>
+        </div>
+
+        <!-- Alerta de Conexão do Supabase (exibido apenas se ainda não configurado) -->
+        <div id="auth-unconfigured-banner" class="auth-notice-banner hidden" style="background: rgba(140, 111, 46, 0.08); border: 1px solid var(--gold); margin-bottom: 12px;">
+          <p style="font-size: 12px; margin: 0; color: var(--ink);">
+            ⚡ <strong>Conexão em Nuvem:</strong> Projeto Supabase ainda não conectado. Insira a <em>Project URL</em> e <em>Anon Key</em> em <a href="#" id="link-open-supabase-settings" style="color: var(--brand); text-decoration: underline; font-weight: 600;">Configurações</a> para habilitar o login e a sincronização.
           </p>
         </div>
 
@@ -939,6 +957,9 @@
   </div>
 
   <!-- SCRIPTS DA APLICAÇÃO -->
+  <!-- Supabase JS SDK (Cliente Oficial) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
   <script src="js/state.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/api.js"></script>
