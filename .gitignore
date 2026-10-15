@@ -55,4 +55,5 @@ scriptura_auth.db
 data/
 __pycache__/
 *.py[cod]
+cloudflared
 
