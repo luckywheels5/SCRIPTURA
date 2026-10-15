@@ -113,6 +113,7 @@ class AuthManager {
 
   /**
    * Cadastra nova conta segura com hash Argon2id/bcrypt.
+   * Não realiza busca de dados (pull), pois uma conta recém-criada inicia vazia no servidor.
    */
   async register(email, password, name = '') {
     const data = await window.fetchJson(`${this.apiBase}/api/auth/register`, {
@@ -128,8 +129,19 @@ class AuthManager {
     }
     this.notify('authStateChanged', { authenticated: true, user: this.currentUser });
 
-    // Salva o estado local atual na conta recém-criada
-    await this.syncPush();
+    // Uma conta nova não possui dados na nuvem para buscar (sem syncPull).
+    // Se o usuário já possuir dados locais acumulados antes de criar a conta,
+    // agenda o envio em segundo plano sem travar a interface nem exibir 'buscando dados'.
+    const hasLocalData = window.appState && (
+      (window.appState.highlights && Object.keys(window.appState.highlights).length > 0) ||
+      window.appState.getBookmark()
+    );
+
+    if (hasLocalData) {
+      this.scheduleSyncPush();
+    } else {
+      this.notify('syncStateChanged', { status: 'synced', lastSynced: new Date() });
+    }
 
     return { success: true, user: this.currentUser };
   }

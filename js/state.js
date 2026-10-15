@@ -34,28 +34,57 @@ async function fetchJson(url, options = {}) {
     console.error('Resposta inesperada de', url, '— status', res.status, '— corpo:', raw.slice(0, 300));
 
     // Se o backend retornou JSON estruturado de erro (ex: 400 ou 401 com { error: "..." })
-    if (contentType.toLowerCase().includes('application/json')) {
-      try {
-        const errorData = JSON.parse(raw);
-        if (errorData && (errorData.error || errorData.message)) {
-          const err = new Error(errorData.error || errorData.message);
-          err.status = res.status;
-          err.data = errorData;
-          throw err;
-        }
-      } catch (jsonErr) {
-        if (jsonErr.status) throw jsonErr;
+    try {
+      const errorData = JSON.parse(raw);
+      if (errorData && (errorData.error || errorData.message)) {
+        const err = new Error(errorData.error || errorData.message);
+        err.status = res.status;
+        err.data = errorData;
+        throw err;
       }
+    } catch (jsonErr) {
+      if (jsonErr.status) throw jsonErr;
     }
 
     if (res.status === 429) {
-      const err = new Error('Limite de 20 requisições/hora por IP excedido na API oficial.');
+      const isOfficialBible = url.includes('abibliadigital.com.br');
+      const msg = isOfficialBible
+        ? 'Limite de 20 requisições/hora por IP excedido na API oficial.'
+        : 'Muitas tentativas em pouco tempo. Aguarde alguns instantes antes de tentar novamente.';
+      const err = new Error(msg);
       err.status = 429;
       err.rawBody = raw;
       throw err;
     }
 
-    const err = new Error(`Falha ao buscar dados (status ${res.status}).`);
+    // Contextualiza a mensagem com base no método e endpoint
+    const method = (options.method || 'GET').toUpperCase();
+    let actionDesc = 'ao processar solicitação';
+
+    if (url.includes('/api/auth/register')) {
+      actionDesc = 'ao criar conta';
+    } else if (url.includes('/api/auth/login')) {
+      actionDesc = 'ao autenticar';
+    } else if (url.includes('/api/sync/push')) {
+      actionDesc = 'ao enviar dados de sincronização';
+    } else if (url.includes('/api/sync/pull')) {
+      actionDesc = 'ao sincronizar dados da nuvem';
+    } else if (url.includes('/api/auth/me')) {
+      actionDesc = 'ao verificar sessão';
+    } else if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
+      actionDesc = 'ao enviar dados';
+    } else if (method === 'DELETE') {
+      actionDesc = 'ao excluir dados';
+    } else if (method === 'GET') {
+      actionDesc = 'ao carregar dados';
+    }
+
+    let defaultMsg = `Falha ${actionDesc} (status ${res.status}).`;
+    if (res.status === 404 && url.includes('/api/')) {
+      defaultMsg = 'Serviço do servidor não encontrado ou indisponível (status 404).';
+    }
+
+    const err = new Error(defaultMsg);
     err.status = res.status;
     err.rawBody = raw;
     throw err;
