@@ -4,7 +4,7 @@
   "description": "Scriptura — Bíblia Sagrada e Progresso de Leitura com Autenticação Segura",
   "private": true,
   "scripts": {
-    "build": "echo 'Build completed'",
+    "build": "mkdir -p public && cp -r index.html styles.css js public/",
     "test": "node test_api_node.js"
   },
   "engines": {
