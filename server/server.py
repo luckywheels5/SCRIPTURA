@@ -36,11 +36,17 @@ except ImportError:
     sys.exit(1)
 
 # Configurações do Ambiente
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+# Raiz do projeto (onde estão index.html, styles.css, js)
+if os.path.exists(os.path.join(CURRENT_DIR, "index.html")):
+    BASE_DIR = CURRENT_DIR
+else:
+    BASE_DIR = os.path.dirname(CURRENT_DIR)
+
 PORT = int(os.environ.get("PORT", 8080))
 IS_VERCEL = bool(os.environ.get("VERCEL"))
 # Em ambientes serverless (Vercel, AWS Lambda) ou se o diretório for somente-leitura, usa /tmp
-default_db_dir = "/tmp" if (IS_VERCEL or not os.access(BASE_DIR, os.W_OK)) else BASE_DIR
+default_db_dir = "/tmp" if (IS_VERCEL or not os.access(CURRENT_DIR, os.W_OK)) else CURRENT_DIR
 DB_PATH = os.environ.get("SCRIPTURA_DB_PATH", os.path.join(default_db_dir, "scriptura_auth.db"))
 IS_PRODUCTION = os.environ.get("PRODUCTION", "0") in ("1", "true", "True") or IS_VERCEL
 COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "0") in ("1", "true", "True") or IS_PRODUCTION

@@ -18,10 +18,10 @@ fi
 # Verifica se o bcrypt está disponível; se não, instala via requirements.txt
 if ! python3 -c "import bcrypt" &> /dev/null; then
     echo "[INFO] Instalando dependência obrigatória (bcrypt)..."
-    pip install -r requirements.txt || pip3 install -r requirements.txt
+    pip install -r server/requirements.txt || pip3 install -r server/requirements.txt
 fi
 
 echo "[INFO] Iniciando servidor na porta 8080..."
 echo "[INFO] Acesse no seu navegador: http://localhost:8080"
 echo "=================================================================="
-exec python3 server.py
+exec python3 server/server.py
