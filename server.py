@@ -731,7 +731,7 @@ class ScripturaSecurityHandler(http.server.SimpleHTTPRequestHandler):
                 return self.send_json(200, {"message": "Autenticação em duas etapas (2FA) ativada com sucesso!"})
 
             else:
-                self.send_error(404, "Endpoint não encontrado")
+                return self.send_json(404, {"error": "Endpoint não encontrado"})
 
         except json.JSONDecodeError:
             self.send_json(400, {"error": "JSON malformatado."})
@@ -819,6 +819,8 @@ class ScripturaSecurityHandler(http.server.SimpleHTTPRequestHandler):
 
         # 4. ATENDIMENTO DE ARQUIVOS ESTÁTICOS DO APP
         else:
+            if path.startswith("/api/"):
+                return self.send_json(404, {"error": "Endpoint não encontrado"})
             return super().do_GET()
 
     def do_DELETE(self):
@@ -859,7 +861,7 @@ class ScripturaSecurityHandler(http.server.SimpleHTTPRequestHandler):
                 cookie_str += "; Secure"
             return self.send_json(200, {"message": "Sua conta e todos os seus dados foram excluídos definitivamente."}, set_cookie=cookie_str)
         else:
-            self.send_error(404, "Endpoint não encontrado")
+            return self.send_json(404, {"error": "Endpoint não encontrado"})
 
 
 # ==============================================================================

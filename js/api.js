@@ -149,45 +149,41 @@ class BibleApiService {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 6000); // 6s timeout
 
-      const res = await fetch(`${baseUrl}/books`, {
+      const data = await window.fetchJson(`${baseUrl}/books`, {
         method: 'GET',
         headers: this._getHeaders(),
         signal: controller.signal
       });
       clearTimeout(timeoutId);
 
-      if (res.status === 429) {
-        this.status.rateLimitExceeded = true;
-        this.status.lastError = 'Limite de 20 requisições/hora por IP excedido na API oficial.';
-        this._notifyStatusChange();
-      } else if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
-          fetchedBooks = data.map(b => {
-            const abbrevPt = (b.abbrev && (b.abbrev.pt || b.abbrev)) || '';
-            // Se o campo testament vier ausente, usar fallback estático com as abreviações do VT
-            let testament = b.testament;
-            if (!testament) {
-              testament = VT_ABBREVS.has(abbrevPt.toLowerCase()) ? 'VT' : 'NT';
-            }
-            return {
-              abbrev: { pt: abbrevPt.toLowerCase() },
-              name: b.name,
-              chapters: b.chapters,
-              group: b.group || 'Geral',
-              testament: testament
-            };
-          });
-          this.status.provider = 'abibliadigital';
-          this.status.rateLimitExceeded = false;
-        }
-      } else {
-        throw new Error(`HTTP ${res.status}`);
+      if (Array.isArray(data) && data.length > 0) {
+        fetchedBooks = data.map(b => {
+          const abbrevPt = (b.abbrev && (b.abbrev.pt || b.abbrev)) || '';
+          // Se o campo testament vier ausente, usar fallback estático com as abreviações do VT
+          let testament = b.testament;
+          if (!testament) {
+            testament = VT_ABBREVS.has(abbrevPt.toLowerCase()) ? 'VT' : 'NT';
+          }
+          return {
+            abbrev: { pt: abbrevPt.toLowerCase() },
+            name: b.name,
+            chapters: b.chapters,
+            group: b.group || 'Geral',
+            testament: testament
+          };
+        });
+        this.status.provider = 'abibliadigital';
+        this.status.rateLimitExceeded = false;
       }
     } catch (err) {
+      if (err.status === 429) {
+        this.status.rateLimitExceeded = true;
+        this.status.lastError = 'Limite de 20 requisições/hora por IP excedido na API oficial.';
+      } else {
+        this.status.provider = 'mirror';
+        this.status.lastError = err.message;
+      }
       console.warn('API oficial A Bíblia Digital indisponível para /books. Ativando catálogo canônico:', err.message);
-      this.status.provider = 'mirror';
-      this.status.lastError = err.message;
       this._notifyStatusChange();
     }
 
@@ -204,6 +200,12 @@ class BibleApiService {
   async getChapter(abbrev, chapter) {
     const bookAbbrev = (abbrev || '').toLowerCase().trim();
     const chapNum = parseInt(chapter, 10);
+
+    // Validação estrita para evitar URLs quebradas (.../verses/acf/undefined/1)
+    if (!bookAbbrev || isNaN(chapNum) || chapNum < 1) {
+      throw new Error('Livro ou capítulo inválido para leitura.');
+    }
+
     const cacheKey = `${bookAbbrev}_${chapNum}`;
 
     // 1. Verifica cache local
@@ -236,43 +238,38 @@ class BibleApiService {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 6500);
 
-      const res = await fetch(`${baseUrl}/verses/acf/${bookAbbrev}/${chapNum}`, {
+      const data = await window.fetchJson(`${baseUrl}/verses/acf/${bookAbbrev}/${chapNum}`, {
         method: 'GET',
         headers: this._getHeaders(),
         signal: controller.signal
       });
       clearTimeout(timeoutId);
 
-      if (res.status === 429) {
-        this.status.rateLimitExceeded = true;
-        this.status.lastError = 'Limite de 20 requisições/hora por IP atingido.';
-        this._notifyStatusChange();
-        throw new Error('Rate limit 429');
-      } else if (res.ok) {
-        const data = await res.json();
-        if (data && data.verses) {
-          chapterResult = {
-            book: {
-              name: data.book?.name || bookMeta.name,
-              abbrev: { pt: bookAbbrev },
-              group: data.book?.group || bookMeta.group,
-              testament: bookMeta.testament
-            },
-            chapter: {
-              number: chapNum,
-              verses: data.verses.length
-            },
-            verses: data.verses.map(v => ({
-              number: v.number,
-              text: v.text.trim()
-            }))
-          };
-          this.status.provider = 'abibliadigital';
-        }
-      } else {
-        throw new Error(`HTTP ${res.status}`);
+      if (data && data.verses) {
+        chapterResult = {
+          book: {
+            name: data.book?.name || bookMeta.name,
+            abbrev: { pt: bookAbbrev },
+            group: data.book?.group || bookMeta.group,
+            testament: bookMeta.testament
+          },
+          chapter: {
+            number: chapNum,
+            verses: data.verses.length
+          },
+          verses: data.verses.map(v => ({
+            number: v.number,
+            text: v.text.trim()
+          }))
+        };
+        this.status.provider = 'abibliadigital';
+        this.status.rateLimitExceeded = false;
       }
     } catch (err) {
+      if (err.status === 429) {
+        this.status.rateLimitExceeded = true;
+        this.status.lastError = 'Limite de 20 requisições/hora por IP atingido.';
+      }
       console.warn(`Tentando obter capítulo ${bookAbbrev} ${chapNum} via espelho Almeida (online)...`, err.message);
       this.status.provider = 'mirror';
       this._notifyStatusChange();
@@ -303,29 +300,26 @@ class BibleApiService {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-      const res = await fetch(url, { signal: controller.signal });
+      const data = await window.fetchJson(url, { signal: controller.signal });
       clearTimeout(timeoutId);
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data && data.verses && data.verses.length > 0) {
-          return {
-            book: {
-              name: bookMeta.name,
-              abbrev: { pt: bookMeta.abbrev.pt },
-              group: bookMeta.group,
-              testament: bookMeta.testament
-            },
-            chapter: {
-              number: chapterNumber,
-              verses: data.verses.length
-            },
-            verses: data.verses.map(v => ({
-              number: v.verse,
-              text: (v.text || '').replace(/\s+/g, ' ').trim()
-            }))
-          };
-        }
+      if (data && data.verses && data.verses.length > 0) {
+        return {
+          book: {
+            name: bookMeta.name,
+            abbrev: { pt: bookMeta.abbrev.pt },
+            group: bookMeta.group,
+            testament: bookMeta.testament
+          },
+          chapter: {
+            number: chapterNumber,
+            verses: data.verses.length
+          },
+          verses: data.verses.map(v => ({
+            number: v.verse,
+            text: (v.text || '').replace(/\s+/g, ' ').trim()
+          }))
+        };
       }
     } catch (mirrorErr) {
       console.error('Erro no espelho bible-api:', mirrorErr);
@@ -340,26 +334,23 @@ class BibleApiService {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-      const res = await fetch(`${baseUrl}/verses/acf/random`, {
+      const data = await window.fetchJson(`${baseUrl}/verses/acf/random`, {
         method: 'GET',
         headers: this._getHeaders(),
         signal: controller.signal
       });
       clearTimeout(timeoutId);
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data && data.text) {
-          return {
-            book: {
-              name: data.book?.name || 'Salmos',
-              abbrev: { pt: (data.book?.abbrev?.pt || 'sl').toLowerCase() }
-            },
-            chapter: data.chapter || 1,
-            number: data.number || 1,
-            text: data.text.trim()
-          };
-        }
+      if (data && data.text) {
+        return {
+          book: {
+            name: data.book?.name || 'Salmos',
+            abbrev: { pt: (data.book?.abbrev?.pt || 'sl').toLowerCase() }
+          },
+          chapter: data.chapter || 1,
+          number: data.number || 1,
+          text: data.text.trim()
+        };
       }
     } catch (e) {
       console.warn('API oficial indisponível para verso aleatório, utilizando semente inspiracional:', e.message);
@@ -394,7 +385,7 @@ class BibleApiService {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 6500);
 
-      const res = await fetch(`${baseUrl}/verses/search`, {
+      const data = await window.fetchJson(`${baseUrl}/verses/search`, {
         method: 'POST',
         headers: this._getHeaders(),
         body: JSON.stringify({
@@ -405,27 +396,25 @@ class BibleApiService {
       });
       clearTimeout(timeoutId);
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data && data.verses) {
-          return {
-            occurrence: data.occurrence || data.verses.length,
-            verses: data.verses.map(v => ({
-              book: {
-                name: v.book?.name || 'Bíblia',
-                abbrev: { pt: (v.book?.abbrev?.pt || '').toLowerCase() }
-              },
-              chapter: v.chapter,
-              number: v.number,
-              text: v.text.trim()
-            }))
-          };
-        }
-      } else if (res.status === 429) {
+      if (data && data.verses) {
+        return {
+          occurrence: data.occurrence || data.verses.length,
+          verses: data.verses.map(v => ({
+            book: {
+              name: v.book?.name || 'Bíblia',
+              abbrev: { pt: (v.book?.abbrev?.pt || '').toLowerCase() }
+            },
+            chapter: v.chapter,
+            number: v.number,
+            text: v.text.trim()
+          }))
+        };
+      }
+    } catch (e) {
+      if (e.status === 429) {
         this.status.rateLimitExceeded = true;
         this._notifyStatusChange();
       }
-    } catch (e) {
       console.warn('Busca na API oficial falhou ou offline:', e.message);
     }
 

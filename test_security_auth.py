@@ -261,8 +261,20 @@ def run_tests():
         conn.close()
         print("✓ Teste 12 Passou: Exclusão definitiva de conta e dados pessoais com sucesso (LGPD).")
 
+        # TESTE 13: Rotas de API inexistentes devem retornar JSON (nunca HTML)
+        req_unknown_api = urllib.request.Request(f"{SERVER_URL}/api/rota-inexistente")
+        try:
+            urllib.request.urlopen(req_unknown_api)
+            assert False, "Deveria retornar 404 para rota inexistente"
+        except urllib.error.HTTPError as e:
+            assert e.code == 404
+            assert "application/json" in e.headers.get("Content-Type", "")
+            err_data = json.loads(e.read().decode())
+            assert "error" in err_data
+            print("✓ Teste 13 Passou: Rotas /api/ desconhecidas retornam JSON 404 (evitando erro 'Unexpected token <').")
+
         print("\n=======================================================")
-        print(" TODOS OS 12 TESTES DE CONFORMIDADE DE SEGURANÇA PASSARAM!")
+        print(" TODOS OS 13 TESTES DE CONFORMIDADE DE SEGURANÇA PASSARAM!")
         print("=======================================================")
 
     finally:

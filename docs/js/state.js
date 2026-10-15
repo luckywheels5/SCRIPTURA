@@ -13,6 +13,61 @@ const STORAGE_KEYS = {
   CACHE_BOOKS: 'acf_cache_books'
 };
 
+/**
+ * Utilitário centralizado para requisições HTTP seguras.
+ * Valida status HTTP e Content-Type antes de tentar interpretar a resposta como JSON,
+ * prevenindo o erro técnico "Unexpected token '<' ... is not valid JSON".
+ */
+async function fetchJson(url, options = {}) {
+  let res;
+  try {
+    res = await fetch(url, options);
+  } catch (netErr) {
+    console.error('Falha de rede ao acessar:', url, netErr);
+    throw new Error('Falha de conexão com o servidor. Verifique sua rede ou se o backend está em execução.');
+  }
+
+  const contentType = (res.headers && res.headers.get('content-type')) || '';
+
+  if (!res.ok || !contentType.toLowerCase().includes('application/json')) {
+    const raw = await res.text(); // ler como texto, nunca como JSON, nesse caso
+    console.error('Resposta inesperada de', url, '— status', res.status, '— corpo:', raw.slice(0, 300));
+
+    // Se o backend retornou JSON estruturado de erro (ex: 400 ou 401 com { error: "..." })
+    if (contentType.toLowerCase().includes('application/json')) {
+      try {
+        const errorData = JSON.parse(raw);
+        if (errorData && (errorData.error || errorData.message)) {
+          const err = new Error(errorData.error || errorData.message);
+          err.status = res.status;
+          err.data = errorData;
+          throw err;
+        }
+      } catch (jsonErr) {
+        if (jsonErr.status) throw jsonErr;
+      }
+    }
+
+    if (res.status === 429) {
+      const err = new Error('Limite de 20 requisições/hora por IP excedido na API oficial.');
+      err.status = 429;
+      err.rawBody = raw;
+      throw err;
+    }
+
+    const err = new Error(`Falha ao buscar dados (status ${res.status}).`);
+    err.status = res.status;
+    err.rawBody = raw;
+    throw err;
+  }
+
+  return res.json();
+}
+
+if (typeof window !== 'undefined') {
+  window.fetchJson = fetchJson;
+}
+
 class StateManager {
   constructor() {
     this.bookmark = this._loadBookmark();

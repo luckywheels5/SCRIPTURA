@@ -5,6 +5,7 @@
  * - Sincronização entre Dispositivos: Destaques, marcadores e progresso mesclados com segurança.
  * - Sessões HttpOnly com Invalidação no Servidor.
  * - Suporte a 2FA (TOTP), Portabilidade e Exclusão Definitiva (LGPD).
+ * - Uso obrigatório de fetchJson para prevenir "Unexpected token '<' ... is not valid JSON".
  */
 
 class AuthManager {
@@ -15,9 +16,17 @@ class AuthManager {
     this.listeners = new Set();
 
     // Determina a URL base da API de autenticação
-    this.apiBase = window.location.origin;
+    this.apiBase = window.SCRIPTURA_API_BASE || localStorage.getItem('scriptura_api_base') || window.location.origin;
     if (window.location.protocol === 'file:') {
       this.apiBase = 'http://localhost:8080';
+    } else if (
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') &&
+      window.location.port !== '8080' &&
+      !window.SCRIPTURA_API_BASE &&
+      !localStorage.getItem('scriptura_api_base')
+    ) {
+      // Se em desenvolvimento local em porta estática diferente (ex: Live Server 5500, 3000), direciona à porta padrão da API (8080)
+      this.apiBase = `http://${window.location.hostname}:8080`;
     }
   }
 
@@ -49,24 +58,21 @@ class AuthManager {
    */
   async checkSession() {
     try {
-      const res = await fetch(`${this.apiBase}/api/auth/me`, {
+      const data = await window.fetchJson(`${this.apiBase}/api/auth/me`, {
         method: 'GET',
         headers: { 'Accept': 'application/json' },
         credentials: 'include' // Envia cookie httpOnly SameSite=Strict
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data.authenticated && data.user) {
-          this.currentUser = data.user;
-          this.notify('authStateChanged', { authenticated: true, user: this.currentUser });
-          // Sincroniza dados da nuvem para o navegador
-          await this.syncPull();
-          return this.currentUser;
-        }
+      if (data && data.authenticated && data.user) {
+        this.currentUser = data.user;
+        this.notify('authStateChanged', { authenticated: true, user: this.currentUser });
+        // Sincroniza dados da nuvem para o navegador
+        await this.syncPull();
+        return this.currentUser;
       }
     } catch (e) {
-      // Falha silenciosa: modo offline ou sem backend iniciado
+      // Falha silenciosa: modo offline, backend não iniciado ou rota estática sem backend
       console.info('Modo Local/Offline ativo (Backend opcional não conectado).');
     }
 
@@ -79,20 +85,15 @@ class AuthManager {
    * Realiza login no servidor.
    */
   async login(email, password, totpCode = '') {
-    const res = await fetch(`${this.apiBase}/api/auth/login`, {
+    const data = await window.fetchJson(`${this.apiBase}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       credentials: 'include',
       body: JSON.stringify({ email, password, totp_code: totpCode })
     });
 
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || 'Falha ao autenticar.');
-    }
-
     // Se 2FA for exigido
-    if (data.two_factor_required) {
+    if (data && data.two_factor_required) {
       return { twoFactorRequired: true };
     }
 
@@ -114,17 +115,12 @@ class AuthManager {
    * Cadastra nova conta segura com hash Argon2id/bcrypt.
    */
   async register(email, password, name = '') {
-    const res = await fetch(`${this.apiBase}/api/auth/register`, {
+    const data = await window.fetchJson(`${this.apiBase}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       credentials: 'include',
       body: JSON.stringify({ email, password, name })
     });
-
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || 'Não foi possível criar a conta.');
-    }
 
     this.currentUser = data.user;
     if (data.token) {
@@ -144,16 +140,17 @@ class AuthManager {
   async logout() {
     try {
       const token = sessionStorage.getItem('scriptura_session_token') || '';
-      await fetch(`${this.apiBase}/api/auth/logout`, {
+      await window.fetchJson(`${this.apiBase}/api/auth/logout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': token ? `Bearer ${token}` : ''
         },
-        credentials: 'include'
+        credentials: 'include',
+        body: '{}'
       });
     } catch (e) {
-      console.warn('Erro ao chamar logout no servidor:', e);
+      console.warn('Erro ao chamar logout no servidor:', e.message);
     }
 
     sessionStorage.removeItem('scriptura_session_token');
@@ -167,19 +164,15 @@ class AuthManager {
    */
   async logoutAll() {
     const token = sessionStorage.getItem('scriptura_session_token') || '';
-    const res = await fetch(`${this.apiBase}/api/auth/logout-all`, {
+    const data = await window.fetchJson(`${this.apiBase}/api/auth/logout-all`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': token ? `Bearer ${token}` : ''
       },
-      credentials: 'include'
+      credentials: 'include',
+      body: '{}'
     });
-
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || 'Falha ao encerrar todas as sessões.');
-    }
 
     sessionStorage.removeItem('scriptura_session_token');
     this.currentUser = null;
@@ -191,28 +184,22 @@ class AuthManager {
    * Solicitação de recuperação de senha com token de expiração curta.
    */
   async forgotPassword(email) {
-    const res = await fetch(`${this.apiBase}/api/auth/forgot-password`, {
+    return await window.fetchJson(`${this.apiBase}/api/auth/forgot-password`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify({ email })
     });
-    return await res.json();
   }
 
   /**
    * Redefine senha com token único.
    */
   async resetPassword(token, newPassword) {
-    const res = await fetch(`${this.apiBase}/api/auth/reset-password`, {
+    return await window.fetchJson(`${this.apiBase}/api/auth/reset-password`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify({ token, new_password: newPassword })
     });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || 'Falha ao redefinir senha.');
-    }
-    return data;
   }
 
   /**
@@ -220,7 +207,7 @@ class AuthManager {
    */
   async exportData() {
     const token = sessionStorage.getItem('scriptura_session_token') || '';
-    const res = await fetch(`${this.apiBase}/api/user/export`, {
+    const data = await window.fetchJson(`${this.apiBase}/api/user/export`, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
@@ -229,11 +216,6 @@ class AuthManager {
       credentials: 'include'
     });
 
-    if (!res.ok) {
-      throw new Error('Falha ao exportar dados.');
-    }
-
-    const data = await res.json();
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -251,7 +233,7 @@ class AuthManager {
    */
   async deleteAccount(password) {
     const token = sessionStorage.getItem('scriptura_session_token') || '';
-    const res = await fetch(`${this.apiBase}/api/user/account`, {
+    const data = await window.fetchJson(`${this.apiBase}/api/user/account`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -260,11 +242,6 @@ class AuthManager {
       credentials: 'include',
       body: JSON.stringify({ password })
     });
-
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || 'Falha ao excluir a conta.');
-    }
 
     sessionStorage.removeItem('scriptura_session_token');
     this.currentUser = null;
@@ -277,22 +254,20 @@ class AuthManager {
    */
   async setup2FA() {
     const token = sessionStorage.getItem('scriptura_session_token') || '';
-    const res = await fetch(`${this.apiBase}/api/auth/2fa/setup`, {
+    return await window.fetchJson(`${this.apiBase}/api/auth/2fa/setup`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': token ? `Bearer ${token}` : ''
       },
-      credentials: 'include'
+      credentials: 'include',
+      body: '{}'
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Falha ao configurar 2FA.');
-    return data;
   }
 
   async verify2FA(code) {
     const token = sessionStorage.getItem('scriptura_session_token') || '';
-    const res = await fetch(`${this.apiBase}/api/auth/2fa/verify`, {
+    const data = await window.fetchJson(`${this.apiBase}/api/auth/2fa/verify`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -301,8 +276,6 @@ class AuthManager {
       credentials: 'include',
       body: JSON.stringify({ code })
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Código 2FA inválido.');
     if (this.currentUser) this.currentUser.two_factor_enabled = true;
     this.notify('authStateChanged', { authenticated: true, user: this.currentUser });
     return data;
@@ -342,7 +315,7 @@ class AuthManager {
       };
 
       const token = sessionStorage.getItem('scriptura_session_token') || '';
-      const res = await fetch(`${this.apiBase}/api/sync/push`, {
+      await window.fetchJson(`${this.apiBase}/api/sync/push`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -352,14 +325,10 @@ class AuthManager {
         body: JSON.stringify(payload)
       });
 
-      if (res.ok) {
-        this.notify('syncStateChanged', { status: 'synced', lastSynced: new Date() });
-      } else {
-        this.notify('syncStateChanged', { status: 'error' });
-      }
+      this.notify('syncStateChanged', { status: 'synced', lastSynced: new Date() });
     } catch (e) {
-      console.warn('Erro ao sincronizar push:', e);
-      this.notify('syncStateChanged', { status: 'offline' });
+      console.warn('Erro ao sincronizar push:', e.message);
+      this.notify('syncStateChanged', { status: 'error' });
     } finally {
       this.isSyncing = false;
     }
@@ -376,7 +345,7 @@ class AuthManager {
       this.notify('syncStateChanged', { status: 'syncing' });
 
       const token = sessionStorage.getItem('scriptura_session_token') || '';
-      const res = await fetch(`${this.apiBase}/api/sync/pull`, {
+      const cloudData = await window.fetchJson(`${this.apiBase}/api/sync/pull`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
@@ -385,16 +354,13 @@ class AuthManager {
         credentials: 'include'
       });
 
-      if (res.ok) {
-        const cloudData = await res.json();
-        // Mescla com os dados locais sem perda
-        if (window.appState.importSyncData) {
-          window.appState.importSyncData(cloudData);
-        }
-        this.notify('syncStateChanged', { status: 'synced', lastSynced: new Date() });
+      if (cloudData && window.appState.importSyncData) {
+        window.appState.importSyncData(cloudData);
       }
+      this.notify('syncStateChanged', { status: 'synced', lastSynced: new Date() });
     } catch (e) {
-      console.warn('Erro ao sincronizar pull:', e);
+      console.warn('Erro ao sincronizar pull:', e.message);
+      this.notify('syncStateChanged', { status: 'error' });
     } finally {
       this.isSyncing = false;
     }
