@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  scriptura:
+    build: .
+    container_name: scriptura-app
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./scriptura_auth.db:/app/scriptura_auth.db
+    environment:
+      - PORT=8080
+      - PRODUCTION=0
