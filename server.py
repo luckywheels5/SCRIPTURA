@@ -38,8 +38,11 @@ except ImportError:
 # Configurações do Ambiente
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PORT = int(os.environ.get("PORT", 8080))
-DB_PATH = os.environ.get("SCRIPTURA_DB_PATH", os.path.join(BASE_DIR, "scriptura_auth.db"))
-IS_PRODUCTION = os.environ.get("PRODUCTION", "0") in ("1", "true", "True")
+IS_VERCEL = bool(os.environ.get("VERCEL"))
+# Em ambientes serverless (Vercel, AWS Lambda) ou se o diretório for somente-leitura, usa /tmp
+default_db_dir = "/tmp" if (IS_VERCEL or not os.access(BASE_DIR, os.W_OK)) else BASE_DIR
+DB_PATH = os.environ.get("SCRIPTURA_DB_PATH", os.path.join(default_db_dir, "scriptura_auth.db"))
+IS_PRODUCTION = os.environ.get("PRODUCTION", "0") in ("1", "true", "True") or IS_VERCEL
 COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "0") in ("1", "true", "True") or IS_PRODUCTION
 CORS_ALLOW_ALL = os.environ.get("CORS_ALLOW_ALL", "1") in ("1", "true", "True")
 
@@ -76,7 +79,10 @@ def get_db():
     conn = sqlite3.connect(DB_PATH, timeout=10)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON;")
-    conn.execute("PRAGMA journal_mode = WAL;")
+    try:
+        conn.execute("PRAGMA journal_mode = WAL;")
+    except Exception:
+        conn.execute("PRAGMA journal_mode = DELETE;")
     return conn
 
 
@@ -162,6 +168,13 @@ def init_db():
         os.chmod(DB_PATH, 0o600)
     except Exception:
         pass
+
+
+# Inicializa o banco de dados no nível do módulo (essencial para Vercel Serverless / Lambda)
+try:
+    init_db()
+except Exception as _e:
+    print(f"[WARN] Inicialização inicial do banco adiada: {_e}")
 
 
 def log_security_event(event_type: str, user_id: str = None, ip_address: str = None, details: str = None):
@@ -955,6 +968,15 @@ def run_server():
         except KeyboardInterrupt:
             print("\n[INFO] Encerrando servidor com segurança...")
             httpd.shutdown()
+
+
+# ==============================================================================
+# EXPORTAÇÕES DE NÍVEL SUPERIOR PARA VERCEL SERVERLESS / WSGI RUNTIMES
+# A Vercel exige explicitamente 'handler', 'app' ou 'application' no nível do módulo.
+# ==============================================================================
+handler = ScripturaSecurityHandler
+app = handler
+application = handler
 
 
 if __name__ == "__main__":
