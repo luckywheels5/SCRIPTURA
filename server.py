@@ -238,12 +238,37 @@ def validate_password_strength(password: str) -> tuple[bool, str]:
     return True, ""
 
 
+# Rotas protegidas mapeadas por método HTTP para suporte estrito a 405 Method Not Allowed
+POST_ONLY_ROUTES = {
+    "/api/auth/register", "/api/auth/signup",
+    "/api/auth/login", "/api/auth/logout", "/api/auth/logout-all",
+    "/api/auth/forgot-password", "/api/auth/reset-password",
+    "/api/sync/push", "/api/auth/2fa/setup", "/api/auth/2fa/verify"
+}
+
+GET_ONLY_ROUTES = {
+    "/api/auth/me", "/api/user/export"
+}
+
 # ==============================================================================
 # HANDLER HTTP PRINCIPAL
 # ==============================================================================
 class ScripturaSecurityHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=BASE_DIR, **kwargs)
+
+    def normalize_api_path(self) -> str:
+        """Normaliza caminho da requisição tratando subpastas e barras finais."""
+        parsed = urllib.parse.urlparse(self.path)
+        path = parsed.path.rstrip('/')
+        if not path:
+            path = '/'
+        # Trata subcaminhos de repositório caso seja servido atrás de proxy ou subpasta (ex: /SCRIPTURA/api/...)
+        for prefix in ('/SCRIPTURA', '/scriptura'):
+            if path.startswith(prefix + '/api/'):
+                path = path[len(prefix):]
+                break
+        return path
 
     def log_message(self, format, *args):
         # Desativa logs de requisições que possam expor senhas em query strings
@@ -260,20 +285,38 @@ class ScripturaSecurityHandler(http.server.SimpleHTTPRequestHandler):
         if COOKIE_SECURE:
             self.send_header("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
 
-        # Cabeçalhos CORS seguros
+        # Cabeçalhos CORS seguros: se houver Origin informado, reflete explicitamente com credentials
         origin = self.headers.get("Origin")
-        if CORS_ALLOW_ALL:
-            self.send_header("Access-Control-Allow-Origin", origin or "*")
+        if origin:
+            self.send_header("Access-Control-Allow-Origin", origin)
             self.send_header("Access-Control-Allow-Credentials", "true")
-            self.send_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-            self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+            self.send_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD")
+            self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Accept")
+        elif CORS_ALLOW_ALL:
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD")
+            self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Accept")
 
         super().end_headers()
 
     def do_OPTIONS(self):
-        """Trata requisições de pre-flight CORS com sucesso imediato."""
+        """Trata requisições de pre-flight CORS com sucesso imediato e métodos permitidos."""
         self.send_response(204)
+        self.send_header("Access-Control-Max-Age", "86400")
         self.end_headers()
+
+    def do_PUT(self):
+        """Trata requisições PUT retornando 405 Method Not Allowed estruturado."""
+        path = self.normalize_api_path()
+        if path.startswith("/api/"):
+            self.send_response(405)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Allow", "GET, POST, DELETE, OPTIONS")
+            self.end_headers()
+            body = json.dumps({"error": f"Método PUT não permitido para {path}."}, ensure_ascii=False).encode("utf-8")
+            self.wfile.write(body)
+            return
+        self.send_error(405, "Method Not Allowed")
 
     def send_json(self, status_code: int, data: dict, set_cookie: str = None):
         """Envia resposta JSON com cabeçalho limpo."""
@@ -344,13 +387,22 @@ class ScripturaSecurityHandler(http.server.SimpleHTTPRequestHandler):
     # ROTAS DA API REST
     # ==========================================================================
     def do_POST(self):
-        parsed = urllib.parse.urlparse(self.path)
-        path = parsed.path
+        path = self.normalize_api_path()
         client_ip = self.client_address[0]
 
+        # Se for uma rota que aceita apenas GET, retorna 405 Method Not Allowed
+        if path in GET_ONLY_ROUTES:
+            self.send_response(405)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Allow", "GET, OPTIONS")
+            self.end_headers()
+            body = json.dumps({"error": f"Método POST não permitido para {path}. Utilize GET."}, ensure_ascii=False).encode("utf-8")
+            self.wfile.write(body)
+            return
+
         try:
-            # 1. CADASTRO / REGISTRO
-            if path == "/api/auth/register":
+            # 1. CADASTRO / REGISTRO (suporta tanto /api/auth/register quanto /api/auth/signup)
+            if path in ("/api/auth/register", "/api/auth/signup"):
                 data = self.read_json_body()
                 email = (data.get("email") or "").strip().lower()
                 password = data.get("password") or ""
@@ -741,8 +793,17 @@ class ScripturaSecurityHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json(500, {"error": "Ocorreu um erro interno no servidor."})
 
     def do_GET(self):
-        parsed = urllib.parse.urlparse(self.path)
-        path = parsed.path
+        path = self.normalize_api_path()
+
+        # Se for uma rota que aceita apenas POST, retorna 405 Method Not Allowed
+        if path in POST_ONLY_ROUTES:
+            self.send_response(405)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Allow", "POST, OPTIONS")
+            self.end_headers()
+            body = json.dumps({"error": f"Método GET não permitido para {path}. Utilize POST."}, ensure_ascii=False).encode("utf-8")
+            self.wfile.write(body)
+            return
 
         # 1. OBTER USUÁRIO ATUAL (STATUS DE AUTENTICAÇÃO)
         if path == "/api/auth/me":
@@ -824,9 +885,18 @@ class ScripturaSecurityHandler(http.server.SimpleHTTPRequestHandler):
             return super().do_GET()
 
     def do_DELETE(self):
-        parsed = urllib.parse.urlparse(self.path)
-        path = parsed.path
+        path = self.normalize_api_path()
         client_ip = self.client_address[0]
+
+        # Se for uma rota de API conhecida que não suporta DELETE, retorna 405 Method Not Allowed
+        if path in POST_ONLY_ROUTES or path in GET_ONLY_ROUTES:
+            self.send_response(405)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Allow", "POST, OPTIONS" if path in POST_ONLY_ROUTES else "GET, OPTIONS")
+            self.end_headers()
+            body = json.dumps({"error": f"Método DELETE não permitido para {path}."}, ensure_ascii=False).encode("utf-8")
+            self.wfile.write(body)
+            return
 
         # EXCLUSÃO DEFINITIVA DE CONTA (DIREITO AO ESQUECIMENTO LGPD)
         if path == "/api/user/account":

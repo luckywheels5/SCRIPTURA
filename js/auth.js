@@ -15,6 +15,15 @@ class AuthManager {
     this.syncTimeout = null;
     this.listeners = new Set();
 
+    // Permite configurar a URL da API via parâmetro de URL (ex: ?api_base=https://meu-backend.onrender.com)
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const paramApi = urlParams.get('api_base') || urlParams.get('api');
+      if (paramApi) {
+        localStorage.setItem('scriptura_api_base', paramApi.replace(/\/+$/, ''));
+      }
+    } catch (_) {}
+
     // Determina a URL base da API de autenticação
     this.apiBase = window.SCRIPTURA_API_BASE || localStorage.getItem('scriptura_api_base') || window.location.origin;
     if (window.location.protocol === 'file:') {

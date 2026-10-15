@@ -273,8 +273,42 @@ def run_tests():
             assert "error" in err_data
             print("✓ Teste 13 Passou: Rotas /api/ desconhecidas retornam JSON 404 (evitando erro 'Unexpected token <').")
 
+        # TESTE 14: Alias /api/auth/signup deve aceitar cadastro POST normalmente
+        req_signup = urllib.request.Request(
+            f"{SERVER_URL}/api/auth/signup",
+            data=json.dumps({"email": "novo.bereano@scriptura.org", "password": "NovaSenhaSegura!2026", "name": "Bereano Novo"}).encode("utf-8"),
+            headers={"Content-Type": "application/json"}
+        )
+        res_signup = urllib.request.urlopen(req_signup)
+        assert res_signup.code == 201
+        assert "token" in json.loads(res_signup.read().decode())
+        print("✓ Teste 14 Passou: Alias /api/auth/signup aceita requisições POST com sucesso.")
+
+        # TESTE 15: Requisição GET em rota POST-only (/api/auth/register) retorna 405 Method Not Allowed
+        req_get_register = urllib.request.Request(f"{SERVER_URL}/api/auth/register")
+        try:
+            urllib.request.urlopen(req_get_register)
+            assert False, "Deveria retornar 405 para GET em /api/auth/register"
+        except urllib.error.HTTPError as e:
+            assert e.code == 405, f"Esperado 405, obtido {e.code}"
+            assert "POST" in e.headers.get("Allow", "")
+            body = json.loads(e.read().decode())
+            assert "error" in body
+            print("✓ Teste 15 Passou: GET em endpoint de criação de conta retorna HTTP 405 (Method Not Allowed) e cabeçalho Allow.")
+
+        # TESTE 16: Requisição OPTIONS (Preflight CORS) responde 204 com cabeçalhos de segurança
+        req_options = urllib.request.Request(f"{SERVER_URL}/api/auth/register")
+        req_options.get_method = lambda: "OPTIONS"
+        req_options.add_header("Origin", "https://scriptura.app")
+        req_options.add_header("Access-Control-Request-Method", "POST")
+        res_opt = urllib.request.urlopen(req_options)
+        assert res_opt.code == 204
+        assert res_opt.headers.get("Access-Control-Allow-Origin") == "https://scriptura.app"
+        assert "POST" in res_opt.headers.get("Access-Control-Allow-Methods", "")
+        print("✓ Teste 16 Passou: Preflight CORS (OPTIONS) responde com 204 e cabeçalhos Access-Control.")
+
         print("\n=======================================================")
-        print(" TODOS OS 13 TESTES DE CONFORMIDADE DE SEGURANÇA PASSARAM!")
+        print(" TODOS OS 16 TESTES DE CONFORMIDADE DE SEGURANÇA PASSARAM!")
         print("=======================================================")
 
     finally:

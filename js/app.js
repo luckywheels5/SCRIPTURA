@@ -1948,8 +1948,9 @@ function initAuthUI() {
         showToast('Conta protegida criada com sucesso!');
         closeAuthModal();
       } catch (err) {
+        console.error('Falha ao cadastrar conta:', err, 'Status:', err.status, 'Corpo:', err.rawBody);
         if (regError) {
-          regError.textContent = err.message || 'Erro ao registrar conta.';
+          regError.textContent = err.message || 'Não foi possível criar a conta, tente novamente.';
           regError.classList.remove('hidden');
         }
       } finally {

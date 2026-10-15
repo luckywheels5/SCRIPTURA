@@ -61,7 +61,7 @@ async function fetchJson(url, options = {}) {
     const method = (options.method || 'GET').toUpperCase();
     let actionDesc = 'ao processar solicitação';
 
-    if (url.includes('/api/auth/register')) {
+    if (url.includes('/api/auth/register') || url.includes('/api/auth/signup')) {
       actionDesc = 'ao criar conta';
     } else if (url.includes('/api/auth/login')) {
       actionDesc = 'ao autenticar';
@@ -80,8 +80,18 @@ async function fetchJson(url, options = {}) {
     }
 
     let defaultMsg = `Falha ${actionDesc} (status ${res.status}).`;
-    if (res.status === 404 && url.includes('/api/')) {
-      defaultMsg = 'Serviço do servidor não encontrado ou indisponível (status 404).';
+
+    if (res.status === 405) {
+      const isStaticHost = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
+      if (url.includes('/api/auth/register') || url.includes('/api/auth/signup')) {
+        defaultMsg = isStaticHost
+          ? 'Não foi possível criar a conta (status 405 Method Not Allowed). O GitHub Pages é estático e recusa requisições POST. Conecte ao backend do Scriptura (server.py).'
+          : 'Não foi possível criar a conta (status 405 Method Not Allowed). O servidor recusou a requisição POST para este endpoint.';
+      } else {
+        defaultMsg = `Método ${method} não permitido para este endpoint (status 405 Method Not Allowed).`;
+      }
+    } else if (res.status === 404 && url.includes('/api/')) {
+      defaultMsg = 'Serviço do servidor não encontrado ou indisponível (status 404). Verifique se o backend está em execução.';
     }
 
     const err = new Error(defaultMsg);
