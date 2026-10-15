@@ -56,4 +56,10 @@ data/
 __pycache__/
 *.py[cod]
 cloudflared
+*.pem
+*.key
+*.crt
+.ssl/
+server/.ssl/
+
 

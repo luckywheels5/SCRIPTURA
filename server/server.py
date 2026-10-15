@@ -22,8 +22,11 @@ import re
 import secrets
 import socketserver
 import sqlite3
+import ssl
 import struct
+import subprocess
 import sys
+import threading
 import time
 import urllib.parse
 from datetime import datetime, timedelta
@@ -44,6 +47,10 @@ else:
     BASE_DIR = os.path.dirname(CURRENT_DIR)
 
 PORT = int(os.environ.get("PORT", 8080))
+HTTPS_PORT = int(os.environ.get("HTTPS_PORT", 8443))
+SSL_DIR = os.path.join(CURRENT_DIR, ".ssl")
+CERT_FILE = os.environ.get("SSL_CERT_FILE", os.path.join(SSL_DIR, "cert.pem"))
+KEY_FILE = os.environ.get("SSL_KEY_FILE", os.path.join(SSL_DIR, "key.pem"))
 IS_VERCEL = bool(os.environ.get("VERCEL"))
 # Em ambientes serverless (Vercel, AWS Lambda) ou se o diretório for somente-leitura, usa /tmp
 default_db_dir = "/tmp" if (IS_VERCEL or not os.access(CURRENT_DIR, os.W_OK)) else CURRENT_DIR
@@ -954,15 +961,58 @@ class ScripturaSecurityHandler(http.server.SimpleHTTPRequestHandler):
 
 
 # ==============================================================================
-# INICIALIZAÇÃO DO SERVIDOR
+# INICIALIZAÇÃO DO SERVIDOR (HTTP + HTTPS DUAL-PORT)
 # ==============================================================================
+def init_ssl_certificates():
+    """Garante que existam certificados SSL/TLS para o servidor HTTPS local."""
+    os.makedirs(SSL_DIR, exist_ok=True)
+    if not (os.path.exists(CERT_FILE) and os.path.exists(KEY_FILE)):
+        try:
+            cmd = [
+                "openssl", "req", "-x509", "-newkey", "rsa:2048",
+                "-keyout", KEY_FILE, "-out", CERT_FILE,
+                "-sha256", "-days", "365", "-nodes",
+                "-subj", "/CN=localhost"
+            ]
+            subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+            os.chmod(KEY_FILE, 0o600)
+            os.chmod(CERT_FILE, 0o600)
+            print("[INFO SSL] Certificado SSL autoassinado gerado com sucesso para localhost.")
+        except Exception as e:
+            print(f"[AVISO SSL] Não foi possível gerar certificado SSL com openssl: {e}")
+
+
+def start_https_server():
+    """Inicia servidor HTTPS (TLS/SSL) em thread dedicada na porta HTTPS_PORT (padrão: 8443)."""
+    init_ssl_certificates()
+    if not (os.path.exists(CERT_FILE) and os.path.exists(KEY_FILE)):
+        return None
+    try:
+        ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        ssl_context.load_cert_chain(certfile=CERT_FILE, keyfile=KEY_FILE)
+        socketserver.ThreadingTCPServer.allow_reuse_address = True
+        httpsd = socketserver.ThreadingTCPServer(("", HTTPS_PORT), ScripturaSecurityHandler)
+        httpsd.socket = ssl_context.wrap_socket(httpsd.socket, server_side=True)
+        t = threading.Thread(target=httpsd.serve_forever, daemon=True)
+        t.start()
+        return httpsd
+    except Exception as e:
+        print(f"[AVISO HTTPS] Falha ao iniciar servidor HTTPS na porta {HTTPS_PORT}: {e}")
+        return None
+
+
 def run_server():
     init_db()
-    socketserver.TCPServer.allow_reuse_address = True
-    with socketserver.TCPServer(("", PORT), ScripturaSecurityHandler) as httpd:
+    socketserver.ThreadingTCPServer.allow_reuse_address = True
+    
+    https_server = start_https_server()
+    
+    with socketserver.ThreadingTCPServer(("", PORT), ScripturaSecurityHandler) as httpd:
         print(f"==================================================================")
-        print(f" SCRIPTURA APP — Servidor Backend Seguro Iniciado na Porta {PORT}")
-        print(f" - URL Local: http://localhost:{PORT}")
+        print(f" SCRIPTURA APP — Servidor Backend Seguro Iniciado")
+        print(f" - URL Local HTTP:  http://localhost:{PORT}")
+        if https_server:
+            print(f" - URL Local HTTPS: https://localhost:{HTTPS_PORT} (TLS/SSL Ativo)")
         print(f" - Banco de Dados: {DB_PATH}")
         print(f" - Hashing de Senhas: bcrypt (Cost=12, Salt Automático)")
         print(f" - Proteção de Sessão: HttpOnly, SameSite=Strict")
@@ -972,7 +1022,9 @@ def run_server():
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:
-            print("\n[INFO] Encerrando servidor com segurança...")
+            print("\n[INFO] Encerrando servidores com segurança...")
+            if https_server:
+                https_server.shutdown()
             httpd.shutdown()
 
 
