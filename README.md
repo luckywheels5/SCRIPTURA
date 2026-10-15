@@ -108,18 +108,64 @@ O texto bíblico **não é embutido fixamente no código**, sendo requisitado di
 
 ---
 
+## 🔒 Segurança & Backend de Autenticação
+
+O **Scriptura** conta com uma arquitetura de segurança rigorosa baseada na linha de base OWASP e em total conformidade com a LGPD:
+
+- **Autenticação Opcional**: O aplicativo funciona 100% offline e localmente sem conta. O login serve para sincronizar destaques, marcadores e progresso entre dispositivos.
+- **Hashing de Senhas**: `scrypt` (nas funções Vercel) e `bcrypt` (custo 12 com salt automático individual no servidor local).
+- **Sessões Criptográficas**: Tokens opacos de 32 bytes emitidos via cookies `HttpOnly`, `SameSite=Strict` e `Secure`, com invalidação obrigatória no servidor.
+- **Proteção Contra Ataques**: Rate limiting por IP, mitigação de Timing Attacks contra enumeração de e-mails e bloqueio automático de conta após 5 falhas consecutivas.
+- **2FA (Autenticação em Duas Etapas)**: TOTP nativo (RFC 6238).
+- **Conformidade LGPD**: Endpoints dedicados para exportação completa de dados pessoais (Portabilidade) e exclusão definitiva de conta com confirmação por senha.
+
+---
+
 ## 🚀 Como Executar Localmente
 
-Você pode rodar localmente com qualquer servidor estático ou com Python:
+### 1. Servidor Completo (HTTP + HTTPS Dual-Port com Autenticação)
+
+Execute o script de inicialização automático:
 
 ```bash
-# Com Python 3:
-python3 -m http.server 8080
-
-# Ou com Node.js (npx serve):
-npx serve .
+chmod +x ./iniciar_servidor.sh
+./iniciar_servidor.sh
 ```
 
-Abra no seu navegador: `http://localhost:8080`
+O servidor iniciará automaticamente com suporte duplo:
+- **HTTP**: [http://localhost:8080](http://localhost:8080)
+- **HTTPS (TLS/SSL)**: [https://localhost:8443](https://localhost:8443)
 
-Para publicação no **GitHub Pages**, a pasta `docs/` já está sincronizada e configurada.
+*(Na primeira execução de HTTPS, o servidor gera automaticamente um certificado de desenvolvimento autoassinado com chaves protegidas).*
+
+### 2. Acesso Externo via Túnel Seguro (HTTPS)
+
+Para testar no celular ou externamente sem configurar portas no roteador:
+
+```bash
+./iniciar_tunel.sh
+```
+
+---
+
+## ☁️ Deploy na Nuvem (Vercel)
+
+O repositório já está estruturado nativamente para deploy na **Vercel**:
+- **Frontend Estático**: Servido na Edge CDN global com latência ultrabaixa.
+- **API Serverless**: Endpoints em Node.js nativos localizados em `/api/auth`, `/api/sync` e `/api/user`.
+- **Headers de Segurança**: Configurados no `vercel.json` (`X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy: strict-origin-when-cross-origin`).
+
+---
+
+## 🧪 Testes Automatizados de Segurança
+
+Para rodar a bateria de testes automatizados:
+
+```bash
+# Testes das Vercel Serverless Functions (Node.js - 15 testes):
+npm test
+
+# Testes do Servidor Backend Local (Python/SQLite - 16 testes):
+python3 server/test_security_auth.py
+```
+
