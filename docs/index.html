@@ -1,453 +1,948 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-theme="light">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Scriptura — A Bíblia Sagrada (ACF) & Estante da Reforma</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  
+  <!-- Nome Oficial do Projeto: Scriptura -->
+  <title>Scriptura — Leitura Bíblica ACF</title>
+  <meta name="title" content="Scriptura — Leitura Bíblica ACF">
+  <meta name="description" content="Scriptura — Site de leitura bíblica na tradução Almeida Corrigida Fiel (ACF), inspirado na tradição reformada de Genebra (1560) e no princípio Sola Scriptura.">
+  <meta name="application-name" content="Scriptura">
+  
+  <!-- Open Graph / Redes Sociais -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Scriptura — Leitura Bíblica ACF">
+  <meta property="og:description" content="Scriptura — Leitura bíblica da Almeida Corrigida Fiel na tradição reformada calvinista de Genebra (1560). Sola Scriptura.">
+  <meta property="og:site_name" content="Scriptura">
+  
+  <!-- Tipografia Histórica do Século XVI: EB Garamond & Cormorant Garamond -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="styles.css">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23ba2026'/><text x='50' y='68' font-size='56' font-family='sans-serif' font-weight='900' fill='white' text-anchor='middle'>S</text></svg>">
+  
+  <!-- Favicon / Marca: Cruz Huguenote & Selo Sóbrio de Genebra -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='none' stroke='%238C6F2E' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><circle cx='16' cy='16' r='14' stroke='%2346281E' stroke-width='1.2'/><path d='M16 5v22M5 16h22M11 11l10 10M21 11L11 21'/><circle cx='16' cy='16' r='3' fill='%238C6F2E'/></svg>">
 </head>
 <body>
 
-<div id="app-container">
+  <!-- APLICAÇÃO EM TELA CHEIA (SEM MOLDURA DE CELULAR NO DESKTOP) -->
+  <div class="app-layout" id="app">
+    
+    <!-- Container de Toasts de Notificação -->
+    <div id="toast-container" class="toast-container"></div>
 
-  <!-- CABEÇALHO YOUVERSION DESKTOP & MOBILE -->
-  <header id="app-header">
-    <div class="header-left">
-      <div class="yv-brand" onclick="switchTab('bible')" title="Scriptura — Início">
-        <div class="yv-logo-badge">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-            <path d="M19 2H6c-1.2 0-2 .8-2 2v16c0 1.2.8 2 2 2h13c.6 0 1-.4 1-1V3c0-.6-.4-1-1-1zm-1 18H6c-.6 0-1-.4-1-1s.4-1 1-1h12v2zm0-4H6c-1.7 0-3 1.3-3 3V4c0-.6.4-1 1-1h14v13z"/>
-          </svg>
+    <!-- ====================================================================== -->
+    <!-- COLUNA 1: ESQUERDA (FIXA ~300px) — NAVEGAÇÃO & CATÁLOGO DE LIVROS     -->
+    <!-- ====================================================================== -->
+    <aside class="col-sidebar" id="col-sidebar">
+      
+      <!-- Topo da Barra Lateral: Marca Scriptura + Botão Circular de Recolher '‹' -->
+      <div class="sidebar-header">
+        <div class="brand-bar">
+          <div class="brand-emblem">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+            </svg>
+          </div>
+          <div class="brand-text-wrap">
+            <h1 class="brand-title">SCRIPTURA</h1>
+          </div>
+          <button class="topbar-circle-btn btn-collapse-sidebar" id="btn-collapse-sidebar" aria-label="Recolher barra lateral" title="Recolher barra lateral">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
         </div>
-        <span class="brand-name">SCRIPTURA</span>
+
+        <!-- Menu de Navegação Principal (Estilo YouVersion) -->
+        <nav class="desktop-nav-menu" aria-label="Navegação Principal">
+          <button class="nav-tab-btn" data-tab="home" id="desk-btn-home">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+              <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+            <span>Início</span>
+          </button>
+
+          <button class="nav-tab-btn active" data-tab="reader" id="desk-btn-bible">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+            </svg>
+            <span>Bíblia</span>
+          </button>
+
+          <button class="nav-tab-btn" data-tab="verse-day" id="desk-btn-verse-day">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <span>Versículo do Dia</span>
+          </button>
+        </nav>
       </div>
 
-      <!-- NAVEGAÇÃO PRINCIPAL DESKTOP (YOUVERSION WEB) -->
-      <nav class="desktop-nav-menu">
-        <button class="desktop-nav-link active" data-tab="bible">
-          <span>Bíblia</span>
+      <!-- Seção: RECENTES (RECENTS) -->
+      <div class="sidebar-recents-section">
+        <span class="sidebar-section-label">RECENTES</span>
+        <div class="sidebar-recents-list" id="sidebar-recents-list">
+          <!-- Gerado dinamicamente com as últimas leituras -->
+        </div>
+      </div>
+
+      <!-- Navegação Secundária -->
+      <div class="sidebar-secondary-nav">
+        <button class="nav-tab-btn" data-tab="confessions" id="desk-btn-confessions">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+          <span>Confissões</span>
         </button>
-        <button class="desktop-nav-link" data-tab="reformation">
-          <span>Estante da Reforma</span>
-        </button>
-        <button class="desktop-nav-link" data-tab="devotionals">
+
+        <button class="nav-tab-btn" data-tab="plans" id="desk-btn-plans">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 11l3 3L22 4"></path>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+          </svg>
           <span>Planos</span>
         </button>
-        <button class="desktop-nav-link" data-tab="prayers">
-          <span>Orações</span>
-        </button>
-        <button class="desktop-nav-link" data-tab="progress">
-          <span>Progresso</span>
-        </button>
-      </nav>
-    </div>
 
-    <!-- SELETOR CENTRAL DE LIVRO / CAPÍTULO / TRADUÇÃO (DESKTOP & MOBILE) -->
-    <div class="header-center">
-      <button id="header-title-btn" class="yv-pill-btn" title="Selecionar Livro e Capítulo">
-        <span id="header-book-chap-label">Carregando...</span>
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
-      </button>
-
-      <div class="yv-pill-btn yv-version-pill" title="Tradução Almeida Corrigida Fiel">
-        <span class="version-code">ACF</span>
+        <button class="nav-tab-btn" data-tab="account" id="desk-btn-account">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <span>Sincronização & Conta</span>
+        </button>
       </div>
-    </div>
 
-    <!-- AÇÕES NO TOPO DIREITO -->
-    <div class="header-actions">
-      <button id="btn-toggle-complete" class="yv-header-btn complete-btn" title="Marcar Capítulo como Lido">
-        <span class="btn-check-icon">✓</span>
-        <span class="desktop-btn-label">Lido</span>
-      </button>
-      <button id="btn-settings" class="yv-header-btn" title="Ajustes de Leitura (Aa)">
-        <span style="font-weight: 700; font-size: 15px;">Aa</span>
-      </button>
-      <button id="btn-header-profile" class="yv-header-profile-btn" onclick="switchTab('progress')" title="Perfil do Leitor">
-        <div class="profile-avatar">S</div>
-      </button>
-    </div>
-  </header>
+      <!-- Rodapé da Barra Lateral: Versão da Tradução -->
+      <div class="sidebar-footer">
+        <button class="sidebar-lang-btn" id="btn-sidebar-version-info" title="Tradução Oficial das Escrituras">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+          </svg>
+          <span>Português (Brasil) · ACF</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+      </div>
 
-  <!-- CONTAINER DE TELAS -->
-  <main id="views-container">
+    </aside>
 
-    <!-- 1. LEITOR BÍBLICO (TEXTO FLUIDO YOUVERSION NO PC) -->
-    <section id="view-bible" class="view-section active">
+    <!-- ====================================================================== -->
+    <!-- COLUNA 2: CENTRAL (FLEXÍVEL) — CONTEÚDO PRINCIPAL (LEITOR / BUSCA)     -->
+    <!-- ====================================================================== -->
+    <main class="col-main-content" id="col-main-content">
       
-      <!-- BOTOES LATERAIS FLUTUANTES NO DESKTOP (< e >) -->
-      <button id="desktop-prev-chap" class="desktop-side-nav-btn prev" title="Capítulo Anterior (Seta Esquerda ←)">
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-          <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
-        </svg>
-      </button>
-
-      <button id="desktop-next-chap" class="desktop-side-nav-btn next" title="Próximo Capítulo (Seta Direita →)">
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-          <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
-        </svg>
-      </button>
-
-      <div class="reader-layout-wrap">
-        <!-- CABEÇALHO DO CAPÍTULO DESKTOP -->
-        <div class="reader-chapter-title-wrap">
-          <h1 id="desktop-chapter-title" class="reader-chapter-heading">Gênesis 1</h1>
-          <div class="reader-version-sub">ALMEIDA CORRIGIDA FIEL (ACF)</div>
+      <!-- ================================================================== -->
+      <!-- BARRA SUPERIOR UNIFICADA (PADRÃO YOUVERSION REFINADO)             -->
+      <!-- Botões circulares soltos, campo de busca pílula, badge ACF e AA    -->
+      <!-- ================================================================== -->
+      <header class="app-topbar" id="app-topbar">
+        <!-- Esquerda: Botão circular Voltar (Leitura) / Expandir Menu (Dashboard) -->
+        <div class="topbar-left">
+          <button class="topbar-circle-btn" id="btn-reader-back" aria-label="Voltar ao início" title="Voltar ao Início">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+          
+          <button class="topbar-circle-btn" id="btn-expand-sidebar" aria-label="Expandir menu lateral" title="Expandir menu lateral">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
         </div>
 
-        <!-- Toast de Conclusão Automática de Leitura -->
-        <div id="reading-completion-toast">
-          <span style="font-size: 18px;">✓</span>
-          <span>Capítulo concluído com sucesso por tempo e rolagem!</span>
+        <!-- Centro: Campo de busca estilo pílula + Botão circular de livro -->
+        <div class="topbar-center">
+          <div class="topbar-search-pill" id="topbar-search-pill">
+            <svg class="search-pill-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" class="search-pill-input" id="topbar-search-input" placeholder="Buscar livro ou termo (ex: Romanos 11)..." autocomplete="off" spellcheck="false">
+            <button class="search-pill-clear hidden" id="btn-topbar-search-clear" aria-label="Limpar busca">&times;</button>
+          </div>
+
+          <!-- Botão circular de livro ao lado da busca -->
+          <button class="topbar-circle-btn" id="btn-topbar-book" title="Trocar livro e capítulo" aria-label="Trocar livro e capítulo">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+            </svg>
+          </button>
         </div>
 
-        <!-- Lista Contínua de Versículos -->
-        <div id="verses-list" class="reader-text-container"></div>
+        <!-- Direita: Grupo de botões circulares soltos com espaçamento + Badge ACF -->
+        <div class="topbar-right">
+          <!-- Badge pílula ACF (cantos totalmente arredondados) -->
+          <button class="topbar-pill-badge" id="badge-topbar-version" title="Almeida Corrigida Fiel (Texto Sagrado Oficial)" aria-label="Versão ACF">
+            <span>ACF</span>
+          </button>
 
-        <!-- Navegação Anterior / Próximo no Rodapé -->
-        <div class="chapter-nav-footer">
-          <button id="btn-prev-chap" class="btn-nav">← Anterior</button>
-          <button id="btn-next-chap" class="btn-nav primary">Próximo Capítulo →</button>
+          <!-- Botão circular AA: abre popover de controle de fonte -->
+          <div class="topbar-font-wrapper">
+            <button class="topbar-circle-btn font-aa-btn" id="btn-topbar-font" title="Tamanho da fonte" aria-label="Ajustar tamanho da fonte">
+              <span>AA</span>
+            </button>
+            
+            <!-- Popover simples de tamanho de fonte flutuando logo abaixo -->
+            <div class="font-popover hidden" id="font-popover">
+              <div class="font-popover-header">
+                <span>Tamanho do Texto</span>
+              </div>
+              <div class="font-popover-controls">
+                <button class="popover-circle-btn" id="popover-font-dec" aria-label="Diminuir fonte" title="Diminuir fonte">A−</button>
+                <span class="popover-font-value" id="popover-font-value">19px</span>
+                <button class="popover-circle-btn" id="popover-font-inc" aria-label="Aumentar fonte" title="Aumentar fonte">A+</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botão circular de Copiar Capítulo -->
+          <button class="topbar-circle-btn" id="btn-copy-chapter" title="Copiar todo o capítulo" aria-label="Copiar capítulo">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="1" ry="1"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+          </button>
+
+          <!-- Botão circular de Configurações / API -->
+          <button class="topbar-circle-btn" id="btn-open-settings" title="Configurações & API" aria-label="Configurações e API">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+          </button>
+
+          <!-- Botão de Conta & Sincronização Segura -->
+          <button class="topbar-account-btn" id="btn-open-auth" title="Conta & Sincronização (Opcional)" aria-label="Conta de usuário">
+            <span class="account-avatar" id="topbar-account-avatar">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </span>
+            <span class="account-name-label" id="topbar-account-label">Entrar</span>
+            <span class="sync-indicator-dot" id="topbar-sync-indicator" title="Sincronização"></span>
+          </button>
+        </div>
+      </header>
+
+      <!-- ================================================================== -->
+      <!-- TELA 1: LEITURA (READER) — MODO DE LEITURA FOCADO (YOUVERSION)        -->
+      <!-- ================================================================== -->
+      <section id="screen-reader" class="screen">
+        <div class="reader-scroll-container" id="reader-scroll-container">
+          
+          <!-- Palco de Leitura: Botão Anterior Flutuante + Coluna de Texto + Botão Próximo Flutuante -->
+          <div class="reader-stage-layout">
+            
+            <!-- Botão Flutuante Lateral Esquerdo (Capítulo Anterior) -->
+            <button class="reader-floating-nav-btn prev" id="btn-floating-prev" title="Capítulo Anterior" aria-label="Capítulo Anterior">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+            </button>
+
+            <!-- Coluna Central de Leitura -->
+            <div class="reader-reading-column">
+              <!-- Cabeçalho do Livro e Capítulo no Leitor -->
+              <header class="reader-chapter-hero" id="reader-chapter-hero">
+                <h1 class="reader-chapter-title-main" id="reader-title">Romanos 11</h1>
+                <h3 class="reader-pericope-title" id="reader-pericope-title">O futuro de Israel</h3>
+              </header>
+
+              <article class="reader-text-card">
+                <div id="reader-content" class="verses-flow">
+                  <!-- Versículos renderizados dinamicamente -->
+                </div>
+              </article>
+            </div>
+
+            <!-- Botão Flutuante Lateral Direito (Próximo Capítulo) -->
+            <button class="reader-floating-nav-btn next" id="btn-floating-next" title="Próximo Capítulo" aria-label="Próximo Capítulo">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ================================================================== -->
+      <!-- TELA 2: BUSCA NAS ESCRITURAS (DASHBOARD)                           -->
+      <!-- ================================================================== -->
+      <section id="screen-search" class="screen">
+        <div class="search-column-wrapper">
+          <div class="section-title-wrap">
+            <span class="section-rule"></span>
+            <h2 class="section-title">Buscar nas Escrituras</h2>
+            <span class="section-rule"></span>
+          </div>
+          
+          <div class="search-bar-wrap">
+            <svg class="search-icon-left" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" class="search-input" id="search-input" placeholder="Digite uma palavra ou termo bíblico (ACF)..." autocomplete="off">
+            <button class="search-clear-btn" id="btn-search-clear" aria-label="Limpar busca">&times;</button>
+          </div>
+
+          <!-- Sugestões Teológicas Rápidas -->
+          <div class="search-suggestions">
+            <button class="chip-btn" data-query="graça">Graça</button>
+            <button class="chip-btn" data-query="fé">Fé</button>
+            <button class="chip-btn" data-query="amor">Amor</button>
+            <button class="chip-btn" data-query="paz">Paz</button>
+            <button class="chip-btn" data-query="salvação">Salvação</button>
+            <button class="chip-btn" data-query="justiça">Justiça</button>
+            <button class="chip-btn" data-query="esperança">Esperança</button>
+          </div>
+
+          <div id="search-status-bar" style="font-size: 13px; color: var(--ink-soft); font-weight: 600; margin-bottom: 12px; display: none;"></div>
+
+          <!-- Lista de Resultados da Busca -->
+          <div class="search-results-list" id="search-results-list">
+            <!-- Resultados renderizados via JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================== -->
+      <!-- ================================================================== -->
+      <!-- TELA 3: INÍCIO / DASHBOARD CENTRAL                                  -->
+      <!-- ================================================================== -->
+      <section id="screen-home" class="screen active">
+        <div class="dashboard-center-wrapper">
+          
+          <!-- Saudação & Sequência de Leitura no Topo do Início -->
+          <header class="context-header" style="margin-bottom: 20px;">
+            <div class="greeting-block">
+              <h2 class="greeting-title" id="greeting-text">Graça e Paz 👋</h2>
+              <p class="greeting-sub" id="current-date-text">Scriptura · Almeida Corrigida Fiel</p>
+            </div>
+
+            <div class="streak-pill" id="streak-pill" title="Sequência diária de leitura">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+              </svg>
+              <span id="streak-count">1</span>
+              <span class="streak-unit">dias</span>
+            </div>
+          </header>
+
+          <!-- Card: Verso do Momento (Sóbrio em Marrom-Couro com Filete Dourado) -->
+          <article class="card-verse-day" id="card-verse-day" style="margin-bottom: 24px;">
+            <div class="verse-day-inner-frame">
+              <div class="verse-day-tag">
+                <span class="verse-tag-ornament">❧</span>
+                <span>Verso do Momento · ACF</span>
+              </div>
+              <blockquote class="verse-day-text" id="verse-day-text">
+                “Carregando o versículo das Escrituras...”
+              </blockquote>
+              <div class="verse-day-divider"></div>
+              <span class="verse-day-ref" id="verse-day-ref">— Almeida Corrigida Fiel</span>
+              
+              <div class="verse-day-actions">
+                <button class="btn-read-context" id="btn-read-context">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                  </svg>
+                  <span>Ler no contexto</span>
+                </button>
+                
+                <button class="btn-verse-refresh" id="btn-verse-refresh" title="Buscar outro versículo">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="23 4 23 10 17 10"></polyline>
+                    <polyline points="1 20 1 14 7 14"></polyline>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                  </svg>
+                  <span>Outro verso</span>
+                </button>
+              </div>
+            </div>
+          </article>
+
+          <!-- Card: Continuar Lendo (Marcador de Página) -->
+          <div class="card-continue" id="card-continue-reading" style="margin-bottom: 24px;">
+            <div class="continue-left">
+              <div class="continue-icon-box">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+              </div>
+              <div class="continue-info">
+                <span class="continue-label" id="continue-label">Marcador de Leitura</span>
+                <h3 class="continue-title" id="continue-title">Comece em Gênesis 1</h3>
+              </div>
+            </div>
+            <div class="continue-arrow">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Card de Boas-Vindas da Reforma -->
+          <div class="dashboard-hero-card">
+            <div class="dashboard-hero-badge">
+              <span>Sola Scriptura · Genebra 1560</span>
+            </div>
+            <h2 class="dashboard-hero-title">A Palavra de Deus em Português</h2>
+            <p class="dashboard-hero-desc">
+              Texto sagrado na tradução oficial Almeida Corrigida Fiel (ACF), sob a sobriedade e a pureza doutrinária da Reforma.
+            </p>
+            <div class="dashboard-hero-actions">
+              <button class="btn-open-reader-hero" id="btn-open-reader-hero">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                </svg>
+                <span id="hero-reading-btn-text">Abrir Leitura Bíblica</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Planos Temáticos Reformados -->
+          <div class="section-title-wrap" style="margin-top: 24px;">
+            <span class="section-rule"></span>
+            <h3 class="section-title">Leituras Temáticas</h3>
+            <span class="section-rule"></span>
+          </div>
+
+          <div class="plans-carousel" id="plans-carousel" style="margin-bottom: 24px;">
+            <div class="plan-card plan-1" data-plan="1">
+              <span class="plan-badge">7 Dias</span>
+              <h4 class="plan-title">Os Salmos de Genebra</h4>
+              <span class="plan-meta">Consolo & Adoração nos Salmos</span>
+            </div>
+            <div class="plan-card plan-2" data-plan="2">
+              <span class="plan-badge">31 Dias</span>
+              <h4 class="plan-title">A Sabedoria dos Provérbios</h4>
+              <span class="plan-meta">Doutrina Prática para o Cotidiano</span>
+            </div>
+            <div class="plan-card plan-3" data-plan="3">
+              <span class="plan-badge">14 Dias</span>
+              <h4 class="plan-title">A Soberania da Graça</h4>
+              <span class="plan-meta">Sola Gratia · Romanos & Efésios</span>
+            </div>
+            <div class="plan-card plan-4" data-plan="4">
+              <span class="plan-badge">30 Dias</span>
+              <h4 class="plan-title">A Vida de Cristo</h4>
+              <span class="plan-meta">Solus Christus · Os 4 Evangelhos</span>
+            </div>
+          </div>
+
+          <!-- Resumo Canônico -->
+          <div class="dashboard-canon-overview">
+            <div class="canon-block">
+              <h3 class="canon-block-title">Vetus Testamentum</h3>
+              <p class="canon-block-sub">39 Livros · A Aliança e a Promessa</p>
+              <div class="canon-tags-row">
+                <span class="canon-tag">Pentateuco</span>
+                <span class="canon-tag">Históricos</span>
+                <span class="canon-tag">Poéticos</span>
+                <span class="canon-tag">Profetas</span>
+              </div>
+            </div>
+
+            <div class="canon-block">
+              <h3 class="canon-block-title">Novum Testamentum</h3>
+              <p class="canon-block-sub">27 Livros · O Cumprimento em Cristo</p>
+              <div class="canon-tags-row">
+                <span class="canon-tag">Evangelhos</span>
+                <span class="canon-tag">Histórico</span>
+                <span class="canon-tag">Epístolas Paulinas</span>
+                <span class="canon-tag">Epístolas Gerais</span>
+                <span class="canon-tag">Profético</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Lema dos Cinco Solas -->
+          <div class="five-solas-banner" style="margin-top: 24px;">
+            <span class="solas-symbol">❧</span>
+            <span class="solas-text">Sola Scriptura · Sola Fide · Sola Gratia · Solus Christus · Soli Deo Gloria</span>
+            <span class="solas-symbol">❧</span>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ================================================================== -->
+      <!-- TELA 4: CONFISSÕES & CATECISMOS HISTÓRICOS                          -->
+      <!-- ================================================================== -->
+      <section id="screen-confessions" class="screen">
+        <div class="confessions-column-wrapper">
+          <div class="section-title-wrap">
+            <span class="section-rule"></span>
+            <h2 class="section-title">Confissões & Símbolos Reformados</h2>
+            <span class="section-rule"></span>
+          </div>
+          <p class="confessions-intro-desc">
+            Documentos históricos da fé cristã reformada (Genebra, Westminster, Heidelberg e Dort). Selecione um documento para ler na tela de leitura com tipografia histórica.
+          </p>
+          <div class="confessions-cards-grid" id="confessions-cards-grid">
+            <!-- Renderizado dinamicamente via JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- TELA 5: TELA DE LIVROS (Exclusiva do Mobile na alternância de abas) -->
+      <section id="screen-bible" class="screen mobile-screen-view">
+        <!-- No mobile, o conteúdo da lista de livros é exibido aqui -->
+      </section>
+
+    </main>
+
+    <!-- ====================================================================== -->
+    <!-- TABBAR FIXA NO RODAPÉ (EXIBIDA APENAS NO MOBILE < 600px)               -->
+    <!-- ====================================================================== -->
+    <nav id="bottom-tabbar" class="bottom-tabbar">
+      <button class="tab-item" data-tab="home" id="tab-btn-home">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        <span>Início</span>
+      </button>
+
+      <button class="tab-item active" data-tab="bible" id="tab-btn-bible">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+        </svg>
+        <span>Bíblia</span>
+      </button>
+
+      <button class="tab-item" data-tab="search" id="tab-btn-search">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <span>Buscar</span>
+      </button>
+
+      <button class="tab-item" data-tab="confessions" id="tab-btn-confessions">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        </svg>
+        <span>Confissões</span>
+      </button>
+    </nav>
+
+  </div> <!-- Fim de .app-layout -->
+
+  <!-- ====================================================================== -->
+  <!-- FOLHA DE AÇÕES DO VERSÍCULO (BOTTOM SHEET)                             -->
+  <!-- ====================================================================== -->
+  <div id="verse-action-sheet" class="bottom-sheet-backdrop hidden">
+    <div class="bottom-sheet-card">
+      <div class="sheet-handle"></div>
+      
+      <div class="sheet-verse-header">
+        <h3 class="sheet-verse-ref" id="sheet-verse-ref">João 3:16</h3>
+        <p class="sheet-verse-snippet" id="sheet-verse-snippet">“Porque Deus amou o mundo...”</p>
+      </div>
+
+      <!-- Cores de Destaque da Paleta Reformada -->
+      <div class="sheet-color-row">
+        <button class="color-swatch-btn swatch-yellow" data-color="yellow" title="Dourado Antigo (#D9B04C)" aria-label="Destacar Dourado"></button>
+        <button class="color-swatch-btn swatch-green" data-color="green" title="Verde Sálvia (#74835A)" aria-label="Destacar Verde"></button>
+        <button class="color-swatch-btn swatch-rose" data-color="rose" title="Rosa Terracota (#A85E62)" aria-label="Destacar Rosa"></button>
+        <button class="color-swatch-btn swatch-blue" data-color="blue" title="Azul Ardósia (#566E88)" aria-label="Destacar Azul"></button>
+        <button class="color-swatch-btn swatch-clear" data-color="" title="Remover Destaque" aria-label="Remover Destaque">&times;</button>
+      </div>
+
+      <!-- Ações do Versículo -->
+      <div class="sheet-actions-list">
+        <button class="sheet-action-btn" id="btn-sheet-bookmark">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+          <span id="text-sheet-bookmark">Marcar esta página</span>
+        </button>
+
+        <button class="sheet-action-btn" id="btn-sheet-copy">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="1" ry="1"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+          <span>Copiar versículo</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- MODAL: SELETOR DE LIVROS E CAPÍTULOS                                   -->
+  <!-- ====================================================================== -->
+  <div id="chapter-picker-modal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title" id="chapter-picker-book">Gênesis</h3>
+          <p style="font-size: 12px; color: var(--ink-soft); font-weight: 500;" id="chapter-picker-sub">Selecione o capítulo</p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button class="topbar-pill-badge" id="btn-modal-toggle-books" style="height: 30px; font-size: 11.5px; padding: 0 12px;" title="Ver todos os livros">
+            <span id="btn-modal-toggle-text">Outro Livro</span>
+          </button>
+          <button class="modal-close-btn" id="btn-close-chapter-picker" aria-label="Fechar">&times;</button>
         </div>
       </div>
-    </section>
 
-    <!-- 2. ESTANTE DA REFORMA PROTESTANTE -->
-    <section id="view-reformation" class="view-section">
-      <div class="content-desktop-wrap">
-        <!-- Banner Histórico Hero da Reforma -->
-        <div class="reformation-hero-banner">
-          <div class="hero-crest">
-            <span class="crest-text">POST TENEBRAS LUX</span>
+      <!-- Visão 1: Grade de Capítulos do Livro Atual -->
+      <div class="chapter-grid-container" id="chapter-grid-container">
+        <div class="chapter-grid" id="chapter-grid">
+          <!-- Botões numéricos 1..N gerados dinamicamente -->
+        </div>
+      </div>
+
+      <!-- Visão 2: Seleção Rápida de Todos os Livros (VT / NT) -->
+      <div class="modal-books-selector hidden" id="modal-books-selector">
+        <div class="segmented-control" style="margin-bottom: 12px;">
+          <button class="segment-btn active" id="modal-tab-vt">Antigo Testamento</button>
+          <button class="segment-btn" id="modal-tab-nt">Novo Testamento</button>
+        </div>
+        <div class="modal-books-list" id="modal-books-list">
+          <!-- Lista de livros para seleção rápida -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- MODAL: DETALHES DO PLANO EM DESTAQUE                                   -->
+  <!-- ====================================================================== -->
+  <div id="plan-modal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" id="plan-modal-title">Plano de Leitura</h3>
+        <button class="modal-close-btn" id="btn-close-plan-modal" aria-label="Fechar">&times;</button>
+      </div>
+      <p id="plan-modal-desc" style="font-size: 14px; line-height: 1.6; color: var(--ink-soft); margin-bottom: 18px;"></p>
+      <button class="btn-read-context" id="btn-plan-start" style="width: 100%; background: var(--brand); color: var(--bg); border: 1px solid var(--gold);">
+        Iniciar Leitura
+      </button>
+    </div>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- MODAL: CONFIGURAÇÕES E FONTE DA API                                    -->
+  <!-- ====================================================================== -->
+  <div id="settings-modal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Configurações & API</h3>
+        <button class="modal-close-btn" id="btn-close-settings-modal" aria-label="Fechar">&times;</button>
+      </div>
+      <div class="settings-section">
+        <label class="settings-field-label">API Oficial: A Bíblia Digital</label>
+        <input type="text" class="settings-input" id="setting-api-url" value="https://www.abibliadigital.com.br/api" readonly>
+        <p class="settings-note">
+          Conexão com a fonte oficial em tradução <strong>ACF</strong>.
+        </p>
+
+        <label class="settings-field-label">Token Pessoal (Opcional)</label>
+        <input type="password" class="settings-input" id="setting-api-token" placeholder="Insira seu Bearer Token se possuir cadastro...">
+        <p class="settings-note">
+          Remove o limite anônimo de 20 req/h caso cadastrado na API oficial.
+        </p>
+      </div>
+      <button class="btn-read-context" id="btn-save-settings" style="width: 100%; background: var(--brand); color: var(--bg); margin-bottom: 8px; border: 1px solid var(--gold);">
+        Salvar Preferências
+      </button>
+      <button class="sheet-action-btn" id="btn-clear-cache" style="justify-content: center; font-size: 12px;">
+        Limpar Cache Local de Capítulos
+      </button>
+    </div>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- MODAL: AUTENTICAÇÃO SEGURA, SINCRONIZAÇÃO EM NUVEM & LGPD             -->
+  <!-- ====================================================================== -->
+  <div id="auth-modal" class="modal-backdrop hidden">
+    <div class="modal-card auth-modal-card">
+      <div class="modal-header">
+        <div class="auth-modal-title-wrap">
+          <div class="auth-badge-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
           </div>
-          <div class="hero-tag">SÉCULO XVI • PATRIMÔNIO TEOLÓGICO REFORMADO & PURITANO</div>
-          <h2>Estante da Reforma Protestante</h2>
+          <div>
+            <h3 class="modal-title" id="auth-modal-title">Sincronização & Conta</h3>
+            <span class="auth-modal-subtitle">Segurança e Privacidade em Primeiro Lugar</span>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="btn-close-auth-modal" aria-label="Fechar">&times;</button>
+      </div>
+
+      <!-- VISÃO A: USUÁRIO NÃO AUTENTICADO -->
+      <div id="auth-view-guest" class="auth-view">
+        <div class="auth-notice-banner">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
           <p>
-            Mergulhe no rico acervo doutrinário que resgatou a autoridade inerrante das Sagradas Escrituras e o Evangelho da justificação pela fé somente em Cristo. Estude os Cinco Solas, as Doutrinas da Graça (TULIP), confissões de fé históricas, catecismos e tratados clássicos dos reformadores.
+            <strong>Login opcional:</strong> O Scriptura continua funcionando normalmente sem conta, salvando localmente. Criar uma conta permite sincronizar seus marcadores, destaques e progresso entre todos os seus dispositivos.
           </p>
         </div>
 
-        <!-- Controles de Busca e Filtros -->
-        <div class="reformation-controls">
-          <div class="reformation-search-wrap">
-            <input type="text" id="reformation-search-input" class="picker-search-input" placeholder="🔍 Pesquisar na estante (ex: Sola Scriptura, Lutero, Calvino, Westminster, TULIP)...">
-          </div>
+        <!-- Abas de Navegação do Modal de Autenticação -->
+        <div class="auth-tabs">
+          <button class="auth-tab-btn active" id="tab-btn-login" data-tab="login">Entrar</button>
+          <button class="auth-tab-btn" id="tab-btn-register" data-tab="register">Criar Conta</button>
+          <button class="auth-tab-btn" id="tab-btn-forgot" data-tab="forgot">Recuperar Senha</button>
+        </div>
 
-          <div class="reformation-filter-tabs">
-            <button class="ref-filter-pill active" data-filter="all">
-              Todas as Obras (<span id="ref-count-all">0</span>)
+        <!-- Formulário 1: Login -->
+        <form id="form-auth-login" class="auth-form">
+          <div class="form-group">
+            <label for="login-email" class="form-label">E-mail</label>
+            <input type="email" id="login-email" class="form-input" required autocomplete="email" placeholder="seu@email.com">
+          </div>
+          <div class="form-group">
+            <div class="form-label-row">
+              <label for="login-password" class="form-label">Senha</label>
+              <button type="button" class="btn-text-link toggle-pw-btn" data-target="login-password">Mostrar</button>
+            </div>
+            <input type="password" id="login-password" class="form-input" required autocomplete="current-password" placeholder="••••••••••">
+          </div>
+          <div class="form-group hidden" id="login-2fa-group">
+            <label for="login-totp" class="form-label">Código 2FA (TOTP de 6 dígitos)</label>
+            <input type="text" id="login-totp" class="form-input" maxlength="6" pattern="[0-9]{6}" placeholder="000000" autocomplete="one-time-code">
+          </div>
+          <div class="form-error-msg hidden" id="login-error-msg"></div>
+          <button type="submit" class="btn-auth-primary" id="btn-submit-login">
+            <span>Entrar com Segurança</span>
+          </button>
+        </form>
+
+        <!-- Formulário 2: Cadastro -->
+        <form id="form-auth-register" class="auth-form hidden">
+          <div class="form-group">
+            <label for="reg-name" class="form-label">Nome de Exibição (Opcional)</label>
+            <input type="text" id="reg-name" class="form-input" autocomplete="name" placeholder="Ex: João Calvino" maxlength="50">
+          </div>
+          <div class="form-group">
+            <label for="reg-email" class="form-label">E-mail</label>
+            <input type="email" id="reg-email" class="form-input" required autocomplete="email" placeholder="seu@email.com">
+          </div>
+          <div class="form-group">
+            <div class="form-label-row">
+              <label for="reg-password" class="form-label">Senha (Mínimo 10 caracteres)</label>
+              <button type="button" class="btn-text-link toggle-pw-btn" data-target="reg-password">Mostrar</button>
+            </div>
+            <input type="password" id="reg-password" class="form-input" required autocomplete="new-password" minlength="10" placeholder="••••••••••••">
+            <!-- Medidor de Força da Senha -->
+            <div class="pw-strength-bar" id="pw-strength-bar">
+              <div class="pw-strength-fill" id="pw-strength-fill"></div>
+            </div>
+            <div class="pw-strength-text" id="pw-strength-text">Digite pelo menos 10 caracteres</div>
+          </div>
+          <div class="form-group">
+            <label for="reg-password-confirm" class="form-label">Confirmar Senha</label>
+            <input type="password" id="reg-password-confirm" class="form-input" required autocomplete="new-password" minlength="10" placeholder="••••••••••••">
+          </div>
+          <div class="form-error-msg hidden" id="reg-error-msg"></div>
+          <button type="submit" class="btn-auth-primary" id="btn-submit-register">
+            <span>Criar Conta Protegida</span>
+          </button>
+        </form>
+
+        <!-- Formulário 3: Recuperação de Senha -->
+        <form id="form-auth-forgot" class="auth-form hidden">
+          <p class="form-instruction">
+            Informe seu e-mail cadastrado. Se houver uma conta correspondente, um token de recuperação descartável (válido por 15 minutos) será gerado.
+          </p>
+          <div class="form-group">
+            <label for="forgot-email" class="form-label">E-mail</label>
+            <input type="email" id="forgot-email" class="form-input" required autocomplete="email" placeholder="seu@email.com">
+          </div>
+          <div class="form-error-msg hidden" id="forgot-error-msg"></div>
+          <div class="form-success-msg hidden" id="forgot-success-msg"></div>
+          <button type="submit" class="btn-auth-primary" id="btn-submit-forgot">
+            <span>Solicitar Token de Recuperação</span>
+          </button>
+
+          <!-- Seção de Aplicação do Token de Redefinição -->
+          <div class="forgot-reset-section" id="forgot-reset-section">
+            <div class="form-divider"><span>Já possui o token de recuperação?</span></div>
+            <div class="form-group">
+              <label for="reset-token" class="form-label">Token de Recuperação</label>
+              <input type="text" id="reset-token" class="form-input" placeholder="Cole o token seguro aqui...">
+            </div>
+            <div class="form-group">
+              <label for="reset-new-password" class="form-label">Nova Senha (Mínimo 10 caracteres)</label>
+              <input type="password" id="reset-new-password" class="form-input" minlength="10" placeholder="••••••••••••">
+            </div>
+            <button type="button" class="btn-auth-secondary" id="btn-submit-reset">
+              <span>Redefinir Senha e Invalidar Sessões</span>
             </button>
-            <button class="ref-filter-pill" data-filter="solas">
-              5 Solas
-            </button>
-            <button class="ref-filter-pill" data-filter="tulip">
-              Doutrinas da Graça (TULIP)
-            </button>
-            <button class="ref-filter-pill" data-filter="creeds">
-              Confissões & Catecismos
-            </button>
-            <button class="ref-filter-pill" data-filter="classics">
-              Tratados Clássicos
-            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- VISÃO B: USUÁRIO AUTENTICADO (PAINEL DA CONTA & SINCRONIZAÇÃO) -->
+      <div id="auth-view-logged" class="auth-view hidden">
+        <div class="logged-user-card">
+          <div class="logged-avatar" id="logged-user-avatar">SC</div>
+          <div class="logged-info">
+            <h4 class="logged-name" id="logged-user-name">Usuário</h4>
+            <span class="logged-email" id="logged-user-email">usuario@exemplo.com</span>
+            <span class="logged-badge-secure">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              Sessão HttpOnly Ativa
+            </span>
           </div>
         </div>
 
-        <!-- Grade de Obras da Estante -->
-        <div id="reformation-shelf-grid" class="reformation-grid"></div>
-      </div>
-    </section>
-
-    <!-- 3. DEVOCIONAIS & PLANOS -->
-    <section id="view-devotionals" class="view-section">
-      <div class="content-desktop-wrap">
-        <div class="yv-featured-banner">
-          <div class="banner-tag">PLANO DE LEITURA & REFLEXÃO REFORMADA</div>
-          <h2>Devocionais Clássicos</h2>
-          <p>Alimente sua alma diariamente com meditações sólidas dos maiores mestres da fé cristã bíblica (Charles Spurgeon, João Calvino, Thomas Watson, J.C. Ryle e John Owen), fundamentadas no texto da ACF.</p>
+        <!-- Seção: Sincronização em Nuvem -->
+        <div class="auth-section-box">
+          <div class="auth-section-header">
+            <div class="auth-section-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+              </svg>
+              <span>Sincronização em Nuvem</span>
+            </div>
+            <span class="sync-status-text" id="sync-status-display">Sincronizado</span>
+          </div>
+          <p class="auth-section-desc">
+            Seus marcadores de página, versículos destacados e progresso de leitura são sincronizados automaticamente e criptografados no servidor.
+          </p>
+          <div class="auth-action-row">
+            <button class="btn-auth-secondary" id="btn-sync-now">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+              </svg>
+              <span>Sincronizar Agora</span>
+            </button>
+            <span class="sync-last-time" id="sync-last-time">Hoje</span>
+          </div>
         </div>
 
-        <div id="devotionals-feed" class="devotionals-grid"></div>
-      </div>
-    </section>
-
-    <!-- 4. MURAL DE ORAÇÕES (YOUVERSION PRAYER) -->
-    <section id="view-prayers" class="view-section">
-      <div class="content-desktop-wrap">
-        <div class="prayer-section-header">
-          <div>
-            <h2 style="font-size: 24px; font-weight: 800; letter-spacing: -0.5px;">Mural de Orações</h2>
-            <p style="font-size: 14px; color: var(--text-secondary); margin-top: 4px;">Leve seus pedidos diante do trono da graça com petições e ações de graças.</p>
+        <!-- Seção: Segurança & 2FA -->
+        <div class="auth-section-box">
+          <div class="auth-section-header">
+            <div class="auth-section-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              <span>Segurança da Conta (2FA)</span>
+            </div>
+            <span class="badge-2fa-status" id="badge-2fa-status">Desativado</span>
           </div>
-          <button id="btn-header-new-prayer" class="btn-nav primary" onclick="openNewPrayerModal()">
-            <span>+ Nova Oração</span>
+          <div id="totp-setup-panel" class="totp-setup-panel hidden">
+            <p class="auth-section-desc">Adicione esta chave secreta ao seu aplicativo autenticador (Google Authenticator, Authy):</p>
+            <div class="totp-secret-box">
+              <code id="totp-secret-text">SECRETKEY</code>
+              <button class="btn-copy-secret" id="btn-copy-totp-secret" title="Copiar Chave">Copiar</button>
+            </div>
+            <div class="form-group" style="margin-top: 10px;">
+              <input type="text" id="totp-confirm-code" class="form-input" maxlength="6" placeholder="Código de 6 dígitos">
+            </div>
+            <button class="btn-auth-primary" id="btn-verify-2fa" style="margin-top: 8px;">Confirmar e Ativar 2FA</button>
+          </div>
+          <button class="btn-auth-secondary" id="btn-toggle-2fa">Configurar Autenticação em 2 Etapas</button>
+        </div>
+
+        <!-- Seção: Privacidade e LGPD -->
+        <div class="auth-section-box">
+          <div class="auth-section-header">
+            <div class="auth-section-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+              <span>Privacidade & Direitos (LGPD)</span>
+            </div>
+          </div>
+          <p class="auth-section-desc">
+            Você tem total soberania sobre seus dados. Exporte todo o seu histórico em formato aberto ou exclua definitivamente seu cadastro a qualquer momento.
+          </p>
+          <div class="auth-button-grid">
+            <button class="btn-auth-secondary" id="btn-export-lgpd">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>Exportar Dados (JSON)</span>
+            </button>
+            <button class="btn-auth-danger-outline" id="btn-delete-account-start">
+              <span>Excluir Minha Conta</span>
+            </button>
+          </div>
+
+          <!-- Caixa de Confirmação para Exclusão da Conta -->
+          <div class="delete-account-confirm-box hidden" id="delete-account-box">
+            <p class="delete-warning-text">
+              <strong>Atenção:</strong> Esta ação é irreversível e excluirá permanentemente todos os seus dados e registros do servidor. Digite sua senha para confirmar:
+            </p>
+            <input type="password" id="delete-account-password" class="form-input" placeholder="Sua senha atual">
+            <div class="delete-actions-row">
+              <button class="btn-auth-secondary" id="btn-cancel-delete">Cancelar</button>
+              <button class="btn-auth-danger" id="btn-confirm-delete">Confirmar Exclusão Definitiva</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botões de Encerramento de Sessão -->
+        <div class="auth-logout-actions">
+          <button class="btn-auth-logout" id="btn-auth-logout">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+            <span>Sair desta Conta</span>
+          </button>
+          <button class="btn-text-link" id="btn-auth-logout-all" style="font-size: 12.5px; color: var(--ink-faint);">
+            Sair de todos os dispositivos
           </button>
         </div>
-
-        <div class="tab-pills" style="margin-top: 18px; margin-bottom: 24px;">
-          <button id="tab-active-prayers" class="tab-pill active">
-            Orações Ativas (<span id="count-active-prayers">0</span>)
-          </button>
-          <button id="tab-answered-prayers" class="tab-pill">
-            Respondidas (<span id="count-answered-prayers">0</span>)
-          </button>
-        </div>
-
-        <div id="prayers-list" class="prayers-grid"></div>
       </div>
-
-      <!-- FAB para Mobile -->
-      <button id="btn-new-prayer-fab" class="fab mobile-only">
-        <span style="font-size: 18px;">+</span> <span>Adicionar Oração</span>
-      </button>
-    </section>
-
-    <!-- 5. PROGRESSO & ATIVIDADE (YOUVERSION PROFILE) -->
-    <section id="view-progress" class="view-section">
-      <div class="content-desktop-wrap">
-        <!-- Card do Usuário -->
-        <div class="yv-card user-summary-card">
-          <div class="user-summary-inner">
-            <div class="user-avatar-large">S</div>
-            <div class="user-info-col">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <h3 id="user-profile-name" style="font-size: 20px; font-weight: 800;">Leitor das Escrituras</h3>
-                <button id="btn-edit-name" class="icon-text-btn" title="Alterar Nome">✎ Editar</button>
-              </div>
-              <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">
-                ID do Leitor: <span id="user-profile-id" style="font-family: monospace;"></span>
-              </div>
-            </div>
-            <span class="acf-badge-pill">LEITOR ATIVO ACF</span>
-          </div>
-        </div>
-
-        <!-- Metas de Leitura -->
-        <div class="yv-card" style="margin-bottom: 28px;">
-          <div style="font-weight: 800; font-size: 16px; margin-bottom: 20px; letter-spacing: 0.3px;">
-            PROGRESSO NA LEITURA BÍBLICA
-          </div>
-
-          <div class="progress-bar-container">
-            <div class="progress-header">
-              <span style="font-weight: 600;">Bíblia Sagrada Completa</span>
-              <span id="prog-bible-pct" style="font-weight: 700;">0%</span>
-            </div>
-            <div class="progress-track">
-              <div id="prog-bible-bar" class="progress-fill" style="width: 0%;"></div>
-            </div>
-            <div id="prog-bible-text" class="progress-subtext">0 de 1.189 capítulos lidos</div>
-          </div>
-
-          <div class="progress-grid-split">
-            <div class="progress-bar-container">
-              <div class="progress-header">
-                <span>Antigo Testamento</span>
-                <span id="prog-ot-pct" style="font-weight: 700;">0%</span>
-              </div>
-              <div class="progress-track">
-                <div id="prog-ot-bar" class="progress-fill" style="width: 0%; background-color: #f59e0b;"></div>
-              </div>
-              <div id="prog-ot-text" class="progress-subtext">0 de 929 capítulos</div>
-            </div>
-
-            <div class="progress-bar-container">
-              <div class="progress-header">
-                <span>Novo Testamento</span>
-                <span id="prog-nt-pct" style="font-weight: 700;">0%</span>
-              </div>
-              <div class="progress-track">
-                <div id="prog-nt-bar" class="progress-fill" style="width: 0%; background-color: #10b981;"></div>
-              </div>
-              <div id="prog-nt-text" class="progress-subtext">0 de 260 capítulos</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Destaques Salvos -->
-        <div class="highlights-section-head">
-          <div style="font-weight: 800; font-size: 16px;">SEUS VERSÍCULOS MARCADOS</div>
-          <div style="font-size: 13px; color: var(--text-secondary);">5 Cores Oficiais YouVersion</div>
-        </div>
-        <div id="all-highlights-list" class="highlights-container"></div>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- BARRA INFERIOR APENAS PARA MOBILE (OCULTADA NO DESKTOP PC) -->
-  <nav id="bottom-nav" class="mobile-only">
-    <button class="nav-item active" data-tab="bible">
-      <span class="nav-icon">📖</span>
-      <span>Bíblia</span>
-    </button>
-    <button class="nav-item" data-tab="reformation">
-      <span class="nav-icon">📜</span>
-      <span>Reforma</span>
-    </button>
-    <button class="nav-item" data-tab="devotionals">
-      <span class="nav-icon">📋</span>
-      <span>Planos</span>
-    </button>
-    <button class="nav-item" data-tab="prayers">
-      <span class="nav-icon">🙏</span>
-      <span>Orações</span>
-    </button>
-    <button class="nav-item" data-tab="progress">
-      <span class="nav-icon">📊</span>
-      <span>Mais</span>
-    </button>
-  </nav>
-
-</div>
-
-<!-- FLOATING ACTION DOCK YOUVERSION NO PC (BARRA INFERIOR MODERNA AO CLICAR EM VERSÍCULO) -->
-<div id="verse-action-dock" class="verse-action-dock">
-  <div class="dock-left-info">
-    <span class="dock-badge">ACF</span>
-    <span id="dock-verse-ref" class="dock-ref-text">Romanos 8:28</span>
-  </div>
-
-  <!-- 5 Cores YouVersion + Borracha -->
-  <div class="dock-colors-palette">
-    <button class="color-dot-btn btn-amarelo" data-color="amarelo" title="Destacar em Amarelo"></button>
-    <button class="color-dot-btn btn-verde" data-color="verde" title="Destacar em Verde"></button>
-    <button class="color-dot-btn btn-azul" data-color="azul" title="Destacar em Azul"></button>
-    <button class="color-dot-btn btn-laranja" data-color="laranja" title="Destacar em Laranja"></button>
-    <button class="color-dot-btn btn-rosa" data-color="rosa" title="Destacar em Rosa"></button>
-    <button id="dock-btn-remove-hl" class="color-dot-btn btn-remove-hl" title="Remover Destaque">✕</button>
-  </div>
-
-  <div class="dock-actions-row">
-    <button id="dock-btn-copy" class="dock-act-btn" title="Copiar Versículo">
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
-      <span>Copiar</span>
-    </button>
-    <button id="dock-btn-prayer" class="dock-act-btn" title="Orar com este Versículo">
-      <span>🙏</span>
-      <span>Orar</span>
-    </button>
-    <button id="dock-btn-close" class="dock-close-btn" title="Fechar barra">✕</button>
-  </div>
-</div>
-
-<!-- MODAL: LEITOR DE DOCUMENTO DA ESTANTE DA REFORMA -->
-<div id="modal-reformation-doc" class="modal-overlay">
-  <div class="modal-sheet doc-reader-sheet">
-    <div class="doc-reader-header">
-      <div>
-        <span id="doc-modal-tag" class="doc-tag">OS 5 SOLAS</span>
-        <h2 id="doc-modal-title" style="font-size: 22px; font-weight: 800; margin-top: 4px;">Sola Scriptura</h2>
-        <div id="doc-modal-author" style="font-size: 13px; color: var(--text-secondary); margin-top: 2px;">Martinho Lutero • 1521</div>
-      </div>
-      <button class="icon-btn" onclick="closeModal('modal-reformation-doc')">✕</button>
-    </div>
-
-    <!-- Passagem Bíblica em Destaque (ACF) -->
-    <div id="doc-modal-passage-box" class="doc-passage-card">
-      <div style="font-size: 11px; font-weight: 800; color: var(--yv-red); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px;">FUNDAMENTO BÍBLICO (ACF)</div>
-      <div id="doc-modal-bible-ref" style="font-weight: 800; font-size: 16px; margin-bottom: 6px;">2 Timóteo 3:16-17</div>
-      <div id="doc-modal-bible-text" style="font-style: italic; font-size: 14px; line-height: 1.6; margin-bottom: 12px; color: var(--text);"></div>
-      <button id="doc-btn-goto-passage" class="btn-nav primary" style="font-size: 12px; padding: 6px 14px;">
-        Ler Passagem na Bíblia →
-      </button>
-    </div>
-
-    <!-- Citação Histórica -->
-    <div id="doc-modal-quote-box" class="doc-quote-card">
-      <div style="font-size: 11px; font-weight: 800; color: var(--text-secondary); letter-spacing: 1px; margin-bottom: 6px;">CITAÇÃO HISTÓRICA DOS REFORMADORES</div>
-      <blockquote id="doc-modal-quote-text" style="font-style: italic; font-size: 14px; line-height: 1.6; color: var(--text);"></blockquote>
-    </div>
-
-    <!-- Conteúdo Teológico / Exposição -->
-    <div class="doc-content-body">
-      <div style="font-size: 12px; font-weight: 800; color: var(--text-secondary); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px;">EXPOSIÇÃO DOUTRINÁRIA & SIGNIFICADO</div>
-      <div id="doc-modal-body-text" style="font-size: 15px; line-height: 1.8; color: var(--text); white-space: pre-line;"></div>
-    </div>
-
-    <div style="display: flex; justify-content: flex-end; margin-top: 24px; border-top: 1px solid var(--border); padding-top: 16px;">
-      <button class="btn-nav" onclick="closeModal('modal-reformation-doc')">Fechar Leitura</button>
     </div>
   </div>
-</div>
 
-<!-- MODAL: SELETOR DE LIVRO E CAPÍTULO (DESIGN MODERNO DESKTOP & MOBILE) -->
-<div id="modal-book-picker" class="modal-overlay">
-  <div class="modal-sheet book-picker-sheet">
-    <div class="picker-header">
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <button id="btn-back-to-books" class="icon-btn" style="display: none;" onclick="backToBookList()" title="Voltar aos livros">←</button>
-        <h3 id="book-picker-title" style="font-size: 19px; font-weight: 800;">Selecionar Livro</h3>
-      </div>
-      <button class="icon-btn" onclick="closeModal('modal-book-picker')">✕</button>
-    </div>
-
-    <!-- Campo de Busca Rápida de Livro -->
-    <div id="picker-search-container" style="margin-bottom: 12px;">
-      <input type="text" id="book-search-input" placeholder="🔍 Filtrar livro (ex: Romanos, João, Salmos)..." class="picker-search-input">
-    </div>
-
-    <div id="picker-testament-tabs" class="tab-pills" style="margin-bottom: 14px;">
-      <button id="tab-ot-btn" class="tab-pill active" onclick="selectTestamentTab('at')">Antigo Testamento (39)</button>
-      <button id="tab-nt-btn" class="tab-pill" onclick="selectTestamentTab('nt')">Novo Testamento (27)</button>
-    </div>
-
-    <div id="book-picker-list" class="picker-scroll-area"></div>
-  </div>
-</div>
-
-<!-- MODAL: AJUSTES DE LEITURA (Aa) -->
-<div id="modal-settings" class="modal-overlay">
-  <div class="modal-sheet settings-sheet">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-      <h3 style="font-size: 18px; font-weight: 800;">Ajustes de Leitura</h3>
-      <button class="icon-btn" onclick="closeModal('modal-settings')">✕</button>
-    </div>
-
-    <div class="settings-group-label">Tema de Fundo</div>
-    <div class="tab-pills" style="margin-bottom: 24px;">
-      <button class="tab-pill theme-opt-btn" data-theme="light">Claro</button>
-      <button class="tab-pill theme-opt-btn" data-theme="sepia">Sépia</button>
-      <button class="tab-pill theme-opt-btn" data-theme="dark">Escuro</button>
-    </div>
-
-    <div class="settings-group-label">Tamanho da Fonte</div>
-    <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 24px;">
-      <span style="font-size: 14px; font-weight: bold;">A</span>
-      <input type="range" id="font-size-slider" min="15" max="28" value="19" style="flex: 1; accent-color: var(--yv-red);">
-      <span style="font-size: 24px; font-weight: 900;">A</span>
-    </div>
-
-    <div class="settings-group-label">Tipografia da Bíblia</div>
-    <div style="display: flex; gap: 10px;">
-      <button id="btn-font-serif" class="btn-nav" style="flex: 1; font-family: Georgia, serif; font-size: 14px;">Com Serifa (Livro Clássico)</button>
-      <button id="btn-font-sans" class="btn-nav" style="flex: 1; font-family: -apple-system, sans-serif; font-size: 14px;">Sem Serifa (Moderna)</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL: NOVA ORAÇÃO -->
-<div id="modal-new-prayer" class="modal-overlay">
-  <div class="modal-sheet prayer-sheet">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
-      <h3 style="font-size: 19px; font-weight: 800;">Novo Pedido de Oração</h3>
-      <button class="icon-btn" onclick="closeModal('modal-new-prayer')">✕</button>
-    </div>
-    <div style="margin-bottom: 16px;">
-      <label class="settings-group-label">TÍTULO DA ORAÇÃO *</label>
-      <input type="text" id="prayer-title-input" placeholder="Ex: Família, saúde, gratidão, discernimento..." class="modal-text-input">
-    </div>
-    <div style="margin-bottom: 20px;">
-      <label class="settings-group-label">DETALHES / PASSAGEM BÍBLICA</label>
-      <textarea id="prayer-desc-input" rows="4" placeholder="Escreva os motivos ou versículo que sustentam sua oração..." class="modal-text-input" style="resize: vertical;"></textarea>
-    </div>
-    <div style="display: flex; justify-content: flex-end; gap: 12px;">
-      <button class="btn-nav" onclick="closeModal('modal-new-prayer')">Cancelar</button>
-      <button id="btn-save-prayer" class="btn-nav primary">Salvar Oração</button>
-    </div>
-  </div>
-</div>
-
-<script src="app.js"></script>
+  <!-- SCRIPTS DA APLICAÇÃO -->
+  <script src="js/state.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/confessions.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>

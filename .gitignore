@@ -43,3 +43,16 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Security & Environment (Mandatory Baseline)
+.env
+.env.*
+*.env
+*.db
+*.sqlite
+*.sqlite3
+scriptura_auth.db
+data/
+__pycache__/
+*.py[cod]
+

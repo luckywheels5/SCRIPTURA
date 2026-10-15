@@ -1,5 +1,0 @@
-package com.example.scriptura_app
-
-import io.flutter.embedding.android.FlutterActivity
-
-class MainActivity : FlutterActivity()
